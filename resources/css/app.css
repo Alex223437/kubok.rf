@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .jt-input {
+        @apply w-[90px] p-0 px-1 m-0 mx-1 rounded border-gray-300 focus:ring-1;
+    }
+}
