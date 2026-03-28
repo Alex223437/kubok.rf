@@ -1,10 +1,7 @@
-<section class="table">
-    <div class="table__header">
-        <div class="article__title color-red ml-title">ТУРНИРНАЯ ТАБЛИЦА (АВТОМАТИЧЕСКАЯ KHL)</div>
-    </div>
-
+<section class="table khl-table">
     <div class="table__wrapper is-active" style="display:block;">
         <div class="table__item is-active">
+            <div class="khl-table__header">ТУРНИРНАЯ ТАБЛИЦА КХЛ</div>
             <div class="table__container">
                 @php
                     $standings = \App\Models\KhlStanding::all();
@@ -14,7 +11,8 @@
                     <table>
                         <tbody class="table__body">
                             <tr class="table__row">
-                                <td class="table__cell">Место</td>
+                                <td class="table__cell">№</td>
+                                <td class="table__cell khl-table__logo-header"></td>
                                 <td class="table__cell">Клуб</td>
                                 <td class="table__cell">И</td>
                                 <td class="table__cell">В</td>
@@ -22,6 +20,7 @@
                                 <td class="table__cell">ВБ</td>
                                 <td class="table__cell">ПБ</td>
                                 <td class="table__cell">ПО</td>
+                                <td class="table__cell">ПП</td>
                                 <td class="table__cell">П</td>
                                 <td class="table__cell">Ш</td>
                                 <td class="table__cell">О</td>
@@ -29,6 +28,11 @@
                             @foreach($standings as $row)
                                 <tr class="table__row">
                                     <td class="table__cell fw-900">{{ $row->rank }}</td>
+                                    <td class="table__cell khl-table__logo-cell">
+                                        @if($row->logo)
+                                            <img src="{{ $row->logo }}" alt="{{ $row->team }}" loading="lazy">
+                                        @endif
+                                    </td>
                                     <td class="table__cell table__cell--team fw-900">{{ $row->team }}</td>
                                     <td class="table__cell">{{ $row->games }}</td>
                                     <td class="table__cell">{{ $row->wins }}</td>
@@ -36,6 +40,7 @@
                                     <td class="table__cell">{{ $row->so_wins }}</td>
                                     <td class="table__cell">{{ $row->so_losses }}</td>
                                     <td class="table__cell">{{ $row->ot_losses }}</td>
+                                    <td class="table__cell">{{ $row->pp }}</td>
                                     <td class="table__cell">{{ $row->losses }}</td>
                                     <td class="table__cell">{{ $row->goals }}</td>
                                     <td class="table__cell color-red fw-900">{{ $row->points }}</td>

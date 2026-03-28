@@ -29,22 +29,36 @@ class ParseLeaguesCommand extends Command
                     KhlStanding::truncate();
                     foreach ($khlData as $row) {
                         KhlStanding::create([
-                            'rank' => $row['Место'] ?? null,
-                            'team' => $row['Клуб'] ?? '',
-                            'games' => $row['И'] ?? null,
-                            'wins' => $row['В'] ?? null,
-                            'ot_wins' => $row['ВО'] ?? null,
-                            'so_wins' => $row['ВБ'] ?? null,
+                            'rank'      => $row['Место'] ?? null,
+                            'team'      => $row['Клуб'] ?? '',
+                            'logo'      => $row['Логотип'] ?? null,
+                            'games'     => $row['И'] ?? null,
+                            'wins'      => $row['В'] ?? null,
+                            'ot_wins'   => $row['ВО'] ?? null,
+                            'so_wins'   => $row['ВБ'] ?? null,
                             'so_losses' => $row['ПБ'] ?? null,
                             'ot_losses' => $row['ПО'] ?? null,
-                            'losses' => $row['П'] ?? null,
-                            'goals' => $row['Ш'] ?? null,
-                            'points' => $row['О'] ?? null,
+                            'pp'        => $row['ПП'] ?? null,
+                            'losses'    => $row['П'] ?? null,
+                            'goals'     => $row['Ш'] ?? null,
+                            'points'    => $row['О'] ?? null,
                         ]);
                     }
                     $this->table(array_keys($khlData[0]), $khlData);
                 } else {
-                    $this->warn('No KHL data parsed.');
+                    $this->warn('Playoff mode detected — standings preserved. Updating logos only.');
+                    $logos = $khlParser->fetchTeamLogos();
+                    if (!empty($logos)) {
+                        foreach (KhlStanding::all() as $standing) {
+                            $logo = $logos[$standing->team]
+                                ?? $logos[$khlParser->normalizeTeamName($standing->team)]
+                                ?? null;
+                            if ($logo) {
+                                $standing->update(['logo' => $logo]);
+                            }
+                        }
+                        $this->info('Logos updated for ' . KhlStanding::whereNotNull('logo')->count() . ' teams.');
+                    }
                 }
                 $this->info('KHL parsed successfully.');
             } catch (\Exception $e) {
@@ -60,9 +74,16 @@ class ParseLeaguesCommand extends Command
                     RfsMatch::truncate();
                     foreach ($rfsData as $row) {
                         RfsMatch::create([
-                            'team1' => $row['team1'] ?? '',
-                            'team2' => $row['team2'] ?? '',
-                            'score_or_date' => $row['score_or_date'] ?? null,
+                            'group_name'     => $row['group_name'] ?? null,
+                            'team1'          => $row['team1'] ?? '',
+                            'team1_logo'     => $row['team1_logo'] ?? null,
+                            'team1_city'     => $row['team1_city'] ?? null,
+                            'team2'          => $row['team2'] ?? '',
+                            'team2_logo'     => $row['team2_logo'] ?? null,
+                            'team2_city'     => $row['team2_city'] ?? null,
+                            'score_or_date'  => $row['score_or_date'] ?? null,
+                            'is_played'      => $row['is_played'] ?? true,
+                            'penalty_winner' => $row['penalty_winner'] ?? null,
                         ]);
                     }
                     $this->table(array_keys($rfsData[0]), $rfsData);

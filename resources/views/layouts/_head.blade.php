@@ -51,3 +51,4 @@
 <script defer="defer" src="/assets/main.js?v={{$v}}"></script>
 <link href="/assets/vendors.css?v={{$v}}" rel="stylesheet">
 <link href="/assets/main.css?v={{$v}}" rel="stylesheet">
+@stack('styles')

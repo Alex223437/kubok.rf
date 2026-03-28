@@ -122,11 +122,11 @@
         @endif
 
 
-        @if($page->tablesActive->isNotEmpty())
+        <!-- @if($page->tablesActive->isNotEmpty())
 
-          @include('public.page-table')
+          @include('public.page-table', ['khlStyle' => $page->code === 'fonbet-kubok-rossii-po-futbolu'])
 
-        @endif
+        @endif -->
 
         @if($page->code == 'fonbet-cempionat-kxl')
           @include('public.tables.khl')
