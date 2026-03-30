@@ -12,26 +12,29 @@
         if ($_m->team2_logo && !isset($teamLogos[$_m->team2])) $teamLogos[$_m->team2] = $_m->team2_logo;
     }
 
-    // Все предстоящие матчи (группы + плей-офф) — только те, у которых дата в score_or_date
-    $upcomingMatches = $allMatches->filter(function ($m) {
-        return !$m->is_played || preg_match('/^\d{2}\.\d{2}\./', $m->score_or_date);
-    })->sortBy(function ($m) {
-        // Конвертируем DD.MM.YYYY HH:MM → YYYYMMDD HH:MM для корректной сортировки
-        if (preg_match('/^(\d{2})\.(\d{2})\.(\d{4})(?:\s+(\d{2}:\d{2}))?/', $m->score_or_date, $r)) {
-            return $r[3] . $r[2] . $r[1] . ($r[4] ?? '00:00');
-        }
-        return $m->score_or_date;
-    });
-
-    // Плей-офф
+    // Плей-офф РПЛ
     $playoffMatches = $allMatches->where('group_name', 'Путь РПЛ. Плей-офф');
 
-    // Считаем турнирные таблицы из результатов групповых матчей
+    // Путь регионов: раунды и плей-офф
+    $regionsRoundNames = [
+        'Путь регионов. Раунд 1',
+        'Путь регионов. Раунд 2',
+        'Путь регионов. Раунд 3',
+        'Путь регионов. Раунд 4',
+        'Путь регионов. Раунд 5',
+        'Путь регионов. Раунд 6',
+    ];
+    $regionsRounds = $allMatches->whereIn('group_name', $regionsRoundNames);
+    $regionsPlayoff = $allMatches->where('group_name', 'Путь регионов. Плей-офф');
+
+    // Считаем турнирные таблицы из результатов групповых матчей (только Путь РПЛ. Группа *)
     $groupStandings = [];
-    foreach ($allMatches->where('is_played', true)->where('group_name', '!=', 'Путь РПЛ. Плей-офф')->groupBy('group_name') as $groupName => $matches) {
+    foreach ($allMatches->where('is_played', true)
+        ->filter(fn($m) => str_starts_with($m->group_name ?? '', 'Путь РПЛ. Группа'))
+        ->groupBy('group_name') as $groupName => $groupMatches) {
         $teams = [];
 
-        foreach ($matches as $match) {
+        foreach ($groupMatches as $match) {
             if (!preg_match('/^(\d+):(\d+)$/', $match->score_or_date, $sc)) continue;
             $g1 = (int)$sc[1];
             $g2 = (int)$sc[2];
@@ -88,25 +91,24 @@
 {{-- ═══════════════════════════════════════════
      Общий заголовок с кнопками-переключателями
 ════════════════════════════════════════════ --}}
-<div class="rfs-header">
-    <div class="rfs__title">Турнирная таблица</div>
-    <div class="table__buttons rfs-header__buttons">
-        <button class="button is-active" type="button" id="rfs-btn-table">
-            <div class="button__text">Таблица</div>
-        </button>
-        <button class="button" type="button" id="rfs-btn-playoff">
-            <div class="button__text">Плей-офф</div>
-        </button>
-    </div>
-</div>
-
 {{-- ═══════════════════════════════════════════
      Вкладка: ТАБЛИЦА
 ════════════════════════════════════════════ --}}
 <div id="rfs-tab-table">
+    <div class="rfs-header">
+        <div class="rfs__title">Турнирная таблица</div>
+        <div class="table__buttons rfs-header__buttons">
+            <button class="button is-active" type="button" id="rfs-btn-table">
+                <div class="button__text">Таблица</div>
+            </button>
+            <button class="button" type="button" id="rfs-btn-playoff">
+                <div class="button__text">Плей-офф</div>
+            </button>
+        </div>
+    </div>
     @if(!empty($groupStandings))
     <section class="table khl-table rfs-groups-section">
-        <div class="table__wrapper is-active rfs-groups-grid">
+        <div class="table__wrapper is-active rfs-groups-grid" style="display:grid;">
             @foreach($groupStandings as $groupName => $teams)
             <div class="table__item is-active">
                 <div class="khl-table__header">{{ $groupName }}</div>
@@ -168,6 +170,17 @@
 @endphp
 
 <div id="rfs-tab-playoff" style="display:none;">
+    <div class="rfs-header">
+        <div class="rfs__title">Плей-офф</div>
+        <div class="table__buttons rfs-header__buttons">
+            <button class="button" type="button" id="rfs-btn-table2">
+                <div class="button__text">Таблица</div>
+            </button>
+            <button class="button is-active" type="button" id="rfs-btn-playoff2">
+                <div class="button__text">Плей-офф</div>
+            </button>
+        </div>
+    </div>
     <section class="rfs rfs-playoff">
         <div class="rfs-bracket">
             @foreach($rounds as $round)
@@ -270,107 +283,241 @@
 </div>
 
 {{-- ═══════════════════════════════════════════
-     Секция: БЛИЖАЙШИЕ МАТЧИ
+     Секция: БЛИЖАЙШИЕ МАТЧИ (Путь РПЛ)
 ════════════════════════════════════════════ --}}
-@if($upcomingMatches->isNotEmpty())
-<section class="rfs-upcoming-section">
-    <div class="rfs-upcoming__header">
-        <div class="rfs__title">Ближайшие матчи</div>
-        <div class="rfs-upcoming__arrows">
-            <button class="rfs-upcoming__arrow" id="rfs-arrow-prev" type="button">&#8592;</button>
-            <button class="rfs-upcoming__arrow" id="rfs-arrow-next" type="button">&#8594;</button>
+@include('components.upcoming-matches', ['sport' => 'rfs', 'matches' => \App\Models\UpcomingMatch::where('sport', 'rfs')->where('league_name', 'LIKE', 'Путь РПЛ%')->where('match_at', '>=', now())->orderBy('match_at')->get()])
+
+{{-- ═══════════════════════════════════════════
+     Секция: ПУТЬ РЕГИОНОВ — ТУРНИРНАЯ ТАБЛИЦА
+════════════════════════════════════════════ --}}
+<div id="regions-tab-rounds">
+    <div class="rfs-header">
+        <div class="rfs__title">Путь регионов</div>
+        <div class="table__buttons rfs-header__buttons">
+            <button class="button is-active" type="button" id="regions-btn-rounds">
+                <div class="button__text">Раунды</div>
+            </button>
+            <button class="button" type="button" id="regions-btn-playoff">
+                <div class="button__text">Плей-офф</div>
+            </button>
         </div>
     </div>
-    <div class="rfs-upcoming__scroll" id="rfs-upcoming-scroll">
-        @foreach($upcomingMatches as $match)
-        @php
-            preg_match('/^(\d{2})\.(\d{2})\.(\d{4})(?:\s+(\d{2}:\d{2}))?$/', $match->score_or_date, $m);
-            $dateFormatted = ($m[1] ?? '') . '/' . ($m[2] ?? '');
-            $time = $m[4] ?? '';
-            $logo1 = $match->team1_logo ?: ($teamLogos[$match->team1] ?? null);
-            $logo2 = $match->team2_logo ?: ($teamLogos[$match->team2] ?? null);
-        @endphp
-        @if(empty($m[1]) || empty($match->team1) || empty($match->team2))
-            @continue
-        @endif
-        <div class="rfs-mcard">
-            <div class="rfs-mcard__header">{{ $match->group_name ?? 'Кубок России' }}</div>
-            <div class="rfs-mcard__body">
-                <div class="rfs-mcard__date-row">
-                    <span class="rfs-mcard__date">{{ $dateFormatted }}</span>
-                    @if($time)
-                        <span class="rfs-mcard__time">{{ $time }} мск</span>
-                    @endif
-                </div>
-                <div class="rfs-mcard__teams">
-                    <div class="rfs-mcard__team">
-                        <div class="rfs-mcard__logo">
-                            @if($logo1)
-                                <img src="{{ $logo1 }}" alt="{{ $match->team1 }}">
-                            @else
-                                <span>{{ mb_strtoupper(mb_substr($match->team1, 0, 2)) }}</span>
-                            @endif
-                        </div>
-                        <div class="rfs-mcard__team-info">
-                            <span class="rfs-mcard__team-name">{{ $match->team1 }}</span>
-                            @if($match->team1_city)
-                                <span class="rfs-mcard__city">{{ $match->team1_city }}</span>
-                            @endif
-                        </div>
-                    </div>
-                    <span class="rfs-mcard__sep">—</span>
-                    <div class="rfs-mcard__team">
-                        <div class="rfs-mcard__logo">
-                            @if($logo2)
-                                <img src="{{ $logo2 }}" alt="{{ $match->team2 }}">
-                            @else
-                                <span>{{ mb_strtoupper(mb_substr($match->team2, 0, 2)) }}</span>
-                            @endif
-                        </div>
-                        <div class="rfs-mcard__team-info">
-                            <span class="rfs-mcard__team-name">{{ $match->team2 }}</span>
-                            @if($match->team2_city)
-                                <span class="rfs-mcard__city">{{ $match->team2_city }}</span>
-                            @endif
-                        </div>
-                    </div>
+    @if($regionsRounds->isNotEmpty())
+    <section class="table khl-table rfs-groups-section">
+        <div class="table__wrapper is-active rfs-groups-grid" style="display:grid;">
+            @foreach($regionsRounds->groupBy('group_name') as $roundName => $roundMatches)
+            <div class="table__item is-active">
+                <div class="khl-table__header">{{ $roundName }}</div>
+                <div class="table__container">
+                    <table>
+                        <tbody class="table__body">
+                            <tr class="table__row">
+                                <td class="table__cell rfs-cell-club">Команда 1</td>
+                                <td class="table__cell rfs-cell-bold" style="text-align:center; width:80px;">Счёт</td>
+                                <td class="table__cell rfs-cell-club">Команда 2</td>
+                            </tr>
+                            @foreach($roundMatches as $match)
+                            @php
+                                $logo1r = $match->team1_logo ?: ($teamLogos[$match->team1] ?? null);
+                                $logo2r = $match->team2_logo ?: ($teamLogos[$match->team2] ?? null);
+                            @endphp
+                            <tr class="table__row">
+                                <td class="table__cell table__cell--team rfs-cell-club">
+                                    <div class="rfs-club">
+                                        @if($logo1r)<img src="{{ $logo1r }}" alt="{{ $match->team1 }}" loading="lazy">@endif
+                                        <span>{{ $match->team1 }}</span>
+                                    </div>
+                                </td>
+                                <td class="table__cell rfs-cell-bold {{ $match->is_played ? 'color-red' : '' }}" style="text-align:center; white-space:nowrap;">
+                                    {{ $match->score_or_date }}
+                                </td>
+                                <td class="table__cell table__cell--team rfs-cell-club">
+                                    <div class="rfs-club">
+                                        @if($logo2r)<img src="{{ $logo2r }}" alt="{{ $match->team2 }}" loading="lazy">@endif
+                                        <span>{{ $match->team2 }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
+            @endforeach
         </div>
-        @endforeach
+    </section>
+    @else
+        <div style="padding: 20px;">Нет данных. Запустите парсер.</div>
+    @endif
+</div>
+
+@php
+    $regionsPlayoffSorted = $regionsPlayoff->sortBy('id')->values();
+    $regionsRoundsPlayoff = [
+        ['title' => '1/2 ФИНАЛА', 'matches' => $regionsPlayoffSorted->slice(0, 2)->values(), 'slots' => 2],
+        ['title' => 'ФИНАЛ',      'matches' => $regionsPlayoffSorted->slice(2, 1)->values(), 'slots' => 1],
+    ];
+@endphp
+
+<div id="regions-tab-playoff" style="display:none;">
+    <div class="rfs-header">
+        <div class="rfs__title">Путь регионов. Плей-офф</div>
+        <div class="table__buttons rfs-header__buttons">
+            <button class="button" type="button" id="regions-btn-rounds2">
+                <div class="button__text">Раунды</div>
+            </button>
+            <button class="button is-active" type="button" id="regions-btn-playoff2">
+                <div class="button__text">Плей-офф</div>
+            </button>
+        </div>
     </div>
-</section>
-@endif
+    <section class="rfs rfs-playoff">
+        <div class="rfs-bracket">
+            @foreach($regionsRoundsPlayoff as $round)
+            <div class="rfs-bracket__round">
+                <div class="rfs-bracket__round-title">{{ $round['title'] }}</div>
+                <div class="rfs-bracket__matches">
+                    @for($i = 0; $i < $round['slots']; $i++)
+                    @php $match = $round['matches']->get($i); @endphp
+                    @if($match)
+                        @php
+                            $logo1r = $match->team1_logo ?: ($teamLogos[$match->team1] ?? null);
+                            $logo2r = $match->team2_logo ?: ($teamLogos[$match->team2] ?? null);
+                            $parts  = array_map('trim', explode(' | ', $match->score_or_date));
+                            $isActualScore = (bool) preg_match('/^\d+:\d+$/', $parts[0] ?? '');
+                            $scores = $isActualScore ? $parts : [];
+                            $dateLines = [];
+                            if (!$isActualScore) {
+                                foreach ($parts as $part) {
+                                    $part = str_replace(["\xc2\xa0", "\xe2\x80\x93", "\xe2\x80\x94"], [' ', '-', '-'], $part);
+                                    $part = trim($part);
+                                    if (preg_match('/^(\d{2}\.\d{2}\.[\d]+)\s*-+\s*(\d{2}\.\d{2}\.[\d]+)/', $part, $r)) {
+                                        $dateLines[] = $r[1]; $dateLines[] = $r[2];
+                                    } elseif (preg_match('/^(\d{2}\.\d{2}\.[\d]+)(?:\s+(\d{2}:\d{2}))?/', $part, $r)) {
+                                        $dateLines[] = $r[1];
+                                        if (!empty($r[2])) $dateLines[] = $r[2];
+                                    } else { $dateLines[] = $part; }
+                                }
+                            }
+                        @endphp
+                        <div class="rfs-bracket__match {{ !$isActualScore ? 'rfs-bracket__match--upcoming' : '' }}">
+                            <div class="rfs-bracket__team">
+                                @if($logo1r)<img class="rfs-bracket__logo" src="{{ $logo1r }}" alt="{{ $match->team1 }}">
+                                @else<div class="rfs-bracket__logo-placeholder">{{ mb_strtoupper(mb_substr($match->team1, 0, 2)) }}</div>@endif
+                                <span class="rfs-bracket__team-name">{{ $match->team1 }}</span>
+                            </div>
+                            <div class="rfs-bracket__scores">
+                                @if($isActualScore)
+                                    @foreach($scores as $score)<span class="rfs-bracket__score">{{ $score }}</span>@endforeach
+                                @else
+                                    @foreach($dateLines as $line)<span class="rfs-bracket__date">{{ $line }}</span>@endforeach
+                                @endif
+                            </div>
+                            <div class="rfs-bracket__team">
+                                @if($logo2r)<img class="rfs-bracket__logo" src="{{ $logo2r }}" alt="{{ $match->team2 }}">
+                                @else<div class="rfs-bracket__logo-placeholder">{{ mb_strtoupper(mb_substr($match->team2, 0, 2)) }}</div>@endif
+                                <span class="rfs-bracket__team-name">{{ $match->team2 }}</span>
+                            </div>
+                        </div>
+                    @else
+                        <div class="rfs-bracket__match rfs-bracket__match--empty">
+                            <div class="rfs-bracket__team"><div class="rfs-bracket__logo-placeholder rfs-bracket__logo-placeholder--unknown">?</div><span class="rfs-bracket__team-name rfs-bracket__team-name--unknown">TBD</span></div>
+                            <div class="rfs-bracket__scores"></div>
+                            <div class="rfs-bracket__team"><div class="rfs-bracket__logo-placeholder rfs-bracket__logo-placeholder--unknown">?</div><span class="rfs-bracket__team-name rfs-bracket__team-name--unknown">TBD</span></div>
+                        </div>
+                    @endif
+                    @endfor
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </section>
+</div>
+
+{{-- ═══════════════════════════════════════════
+     Секция: БЛИЖАЙШИЕ МАТЧИ (Путь регионов)
+════════════════════════════════════════════ --}}
+@include('components.upcoming-matches', ['sport' => 'rfs', 'matches' => \App\Models\UpcomingMatch::where('sport', 'rfs')->where('league_name', 'LIKE', 'Путь регионов%')->where('match_at', '>=', now())->orderBy('match_at')->get()])
 
 <script>
 (function () {
-    var btnTable   = document.getElementById('rfs-btn-table');
-    var btnPlayoff = document.getElementById('rfs-btn-playoff');
     var tabTable   = document.getElementById('rfs-tab-table');
     var tabPlayoff = document.getElementById('rfs-tab-playoff');
 
-    btnTable.addEventListener('click', function () {
+    function showTable() {
         tabTable.style.display   = 'block';
         tabPlayoff.style.display = 'none';
-        btnTable.classList.add('is-active');
-        btnPlayoff.classList.remove('is-active');
-    });
+        ['rfs-btn-table','rfs-btn-table2'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.add('is-active');
+        });
+        ['rfs-btn-playoff','rfs-btn-playoff2'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.remove('is-active');
+        });
+    }
 
-    btnPlayoff.addEventListener('click', function () {
+    function showPlayoff() {
         tabPlayoff.style.display = 'block';
         tabTable.style.display   = 'none';
-        btnPlayoff.classList.add('is-active');
-        btnTable.classList.remove('is-active');
-    });
-
-    // Стрелки слайдера ближайших матчей
-    var scroll = document.getElementById('rfs-upcoming-scroll');
-    var prev   = document.getElementById('rfs-arrow-prev');
-    var next   = document.getElementById('rfs-arrow-next');
-    if (scroll && prev && next) {
-        var step = function () { return scroll.querySelector('.rfs-mcard').offsetWidth + 20; };
-        prev.addEventListener('click', function () { scroll.scrollBy({ left: -step(), behavior: 'smooth' }); });
-        next.addEventListener('click', function () { scroll.scrollBy({ left:  step(), behavior: 'smooth' }); });
+        ['rfs-btn-playoff','rfs-btn-playoff2'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.add('is-active');
+        });
+        ['rfs-btn-table','rfs-btn-table2'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.remove('is-active');
+        });
     }
+
+    ['rfs-btn-table','rfs-btn-table2'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('click', showTable);
+    });
+    ['rfs-btn-playoff','rfs-btn-playoff2'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('click', showPlayoff);
+    });
+})();
+
+// Путь регионов
+(function () {
+    var tabRounds  = document.getElementById('regions-tab-rounds');
+    var tabPlayoff = document.getElementById('regions-tab-playoff');
+
+    function showRounds() {
+        tabRounds.style.display  = 'block';
+        tabPlayoff.style.display = 'none';
+        ['regions-btn-rounds','regions-btn-rounds2'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.add('is-active');
+        });
+        ['regions-btn-playoff','regions-btn-playoff2'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.remove('is-active');
+        });
+    }
+
+    function showPlayoff() {
+        tabPlayoff.style.display = 'block';
+        tabRounds.style.display  = 'none';
+        ['regions-btn-playoff','regions-btn-playoff2'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.add('is-active');
+        });
+        ['regions-btn-rounds','regions-btn-rounds2'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.remove('is-active');
+        });
+    }
+
+    ['regions-btn-rounds','regions-btn-rounds2'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('click', showRounds);
+    });
+    ['regions-btn-playoff','regions-btn-playoff2'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('click', showPlayoff);
+    });
 })();
 </script>

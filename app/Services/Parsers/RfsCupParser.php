@@ -12,9 +12,24 @@ class RfsCupParser extends BaseParser
         'Путь РПЛ. Группа D' => 18960,
     ];
 
-    // Плей-офф (ближайшие предстоящие матчи)
+    // Плей-офф (Путь РПЛ)
     private const PLAYOFF_ROUNDS = [
         'Путь РПЛ. Плей-офф' => 18967,
+    ];
+
+    // Раунды (Путь регионов)
+    private const REGIONS_ROUNDS = [
+        'Путь регионов. Раунд 1' => 18953,
+        'Путь регионов. Раунд 2' => 18954,
+        'Путь регионов. Раунд 3' => 18955,
+        'Путь регионов. Раунд 4' => 18956,
+        'Путь регионов. Раунд 5' => 18957,
+        'Путь регионов. Раунд 6' => 18958,
+    ];
+
+    // Плей-офф (Путь регионов)
+    private const REGIONS_PLAYOFF = [
+        'Путь регионов. Плей-офф' => 18989,
     ];
 
     private const BASE_URL = 'https://www.rfs.ru/cup/tournament/matches';
@@ -35,9 +50,21 @@ class RfsCupParser extends BaseParser
             $data = array_merge($data, $bracketMatches);
         }
 
-        // 3. Плей-офф — предстоящие матчи
+        // 3. Плей-офф РПЛ — предстоящие матчи
         foreach (self::PLAYOFF_ROUNDS as $groupName => $roundId) {
             $matches = $this->fetchRound($roundId, $groupName, 'after');
+            $data = array_merge($data, $matches);
+        }
+
+        // 4. Путь регионов — сыгранные матчи (все раунды)
+        foreach (self::REGIONS_ROUNDS as $groupName => $roundId) {
+            $matches = $this->fetchRound($roundId, $groupName, 'before');
+            $data = array_merge($data, $matches);
+        }
+
+        // 5. Путь регионов — плей-офф (сыгранные + предстоящие)
+        foreach (self::REGIONS_PLAYOFF as $groupName => $roundId) {
+            $matches = $this->fetchRound($roundId, $groupName, '');
             $data = array_merge($data, $matches);
         }
 

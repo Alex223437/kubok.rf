@@ -121,13 +121,6 @@
           </section>
         @endif
 
-
-        <!-- @if($page->tablesActive->isNotEmpty())
-
-          @include('public.page-table', ['khlStyle' => $page->code === 'fonbet-kubok-rossii-po-futbolu'])
-
-        @endif -->
-
         @if($page->code == 'fonbet-cempionat-kxl')
           @include('public.tables.khl')
         @elseif($page->code == 'fonbet-kubok-rossii-po-futbolu')
@@ -139,7 +132,7 @@
         @elseif($page->code == 'fonbet-vyssaia-liga')
           @include('public.tables.basket', ['tag' => 'mhl'])
         @elseif($page->code == 'fonbet-premer-liga')
-          @include('public.tables.basket', ['tag' => 'wpremier'])
+          @include('public.tables.basket', ['tag' => 'wpremier', 'defaultPlayoff' => true])
         @endif
 
       </div>
