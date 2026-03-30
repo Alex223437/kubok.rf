@@ -22,7 +22,7 @@ yarn-error.log
 /.vscode
 /.zed
 
-/.cahce
+/.cache
 /.bashrc
 /.bash_history
 /.local
@@ -30,7 +30,7 @@ yarn-error.log
 /.config
 /.public_html
 /.subversion
+/.claude
 
 .keep
-/public/assets
-/public/spritemap.svg
+

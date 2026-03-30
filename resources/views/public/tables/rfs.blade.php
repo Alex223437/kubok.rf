@@ -86,18 +86,36 @@
 
         $groupStandings[$groupName] = $teams;
     }
+
+    // Хелпер: подготовить строки для x-bracket-match из score_or_date
+    function rfs_bracket_lines(string $scoreOrDate): array {
+        $parts = array_map('trim', explode(' | ', $scoreOrDate));
+        $isScore = (bool) preg_match('/^\d+:\d+$/', $parts[0] ?? '');
+        if ($isScore) return ['isScore' => true, 'lines' => $parts];
+        $lines = [];
+        foreach ($parts as $part) {
+            $part = str_replace(["\xc2\xa0", "\xe2\x80\x93", "\xe2\x80\x94"], [' ', '-', '-'], $part);
+            $part = trim($part);
+            if (preg_match('/^(\d{2}\.\d{2}\.[\d]+)\s*-+\s*(\d{2}\.\d{2}\.[\d]+)/', $part, $r)) {
+                $lines[] = $r[1]; $lines[] = $r[2];
+            } elseif (preg_match('/^(\d{2}\.\d{2}\.[\d]+)(?:\s+(\d{2}:\d{2}))?/', $part, $r)) {
+                $lines[] = $r[1];
+                if (!empty($r[2])) $lines[] = $r[2];
+            } else {
+                $lines[] = $part;
+            }
+        }
+        return ['isScore' => false, 'lines' => $lines];
+    }
 @endphp
 
-{{-- ═══════════════════════════════════════════
-     Общий заголовок с кнопками-переключателями
-════════════════════════════════════════════ --}}
 {{-- ═══════════════════════════════════════════
      Вкладка: ТАБЛИЦА
 ════════════════════════════════════════════ --}}
 <div id="rfs-tab-table">
     <div class="rfs-header">
         <div class="rfs__title">Турнирная таблица</div>
-        <div class="table__buttons rfs-header__buttons">
+        <div class="rfs-header__buttons">
             <button class="button is-active" type="button" id="rfs-btn-table">
                 <div class="button__text">Таблица</div>
             </button>
@@ -130,12 +148,7 @@
                             <tr class="table__row">
                                 <td class="table__cell rfs-cell-bold">{{ $loop->index + 1 }}</td>
                                 <td class="table__cell table__cell--team rfs-cell-club">
-                                    <div class="rfs-club">
-                                        @if($stat['logo'])
-                                            <img src="{{ $stat['logo'] }}" alt="{{ $teamName }}" loading="lazy">
-                                        @endif
-                                        <span>{{ $teamName }}</span>
-                                    </div>
+                                    <x-team-logo :name="$teamName" :logo="$stat['logo']" />
                                 </td>
                                 <td class="table__cell rfs-cell-bold">{{ $stat['И'] }}</td>
                                 <td class="table__cell rfs-cell-bold">{{ $stat['В'] }}</td>
@@ -160,7 +173,6 @@
      Вкладка: ПЛЕЙ-ОФФ
 ════════════════════════════════════════════ --}}
 @php
-    // Распределяем матчи по раундам: первые 4 → 1/4, следующие 2 → 1/2, последний → финал
     $playoffSorted = $playoffMatches->sortBy('id')->values();
     $rounds = [
         ['title' => '1/4 ФИНАЛА', 'matches' => $playoffSorted->slice(0, 4)->values(), 'slots' => 4],
@@ -172,7 +184,7 @@
 <div id="rfs-tab-playoff" style="display:none;">
     <div class="rfs-header">
         <div class="rfs__title">Плей-офф</div>
-        <div class="table__buttons rfs-header__buttons">
+        <div class="rfs-header__buttons">
             <button class="button" type="button" id="rfs-btn-table2">
                 <div class="button__text">Таблица</div>
             </button>
@@ -189,90 +201,22 @@
                 <div class="rfs-bracket__matches">
                     @for($i = 0; $i < $round['slots']; $i++)
                     @php $match = $round['matches']->get($i); @endphp
-
                     @if($match)
                         @php
-                            // Логотипы: сначала из матча, потом из общей карты по имени команды
                             $logo1 = $match->team1_logo ?: ($teamLogos[$match->team1] ?? null);
                             $logo2 = $match->team2_logo ?: ($teamLogos[$match->team2] ?? null);
-
-                            // Определяем тип данных по содержимому, а не по флагу is_played:
-                            // счёт выглядит как "3:1" или "3:1 | 3:2", дата — как "08.04.2026 18:15"
-                            $parts = array_map('trim', explode(' | ', $match->score_or_date));
-                            $isActualScore = (bool) preg_match('/^\d+:\d+$/', $parts[0] ?? '');
-
-                            $scores = [];
-                            $dateLines = [];
-
-                            if ($isActualScore) {
-                                $scores = $parts;
-                            } else {
-                                // Парсим каждую часть как дату
-                                foreach ($parts as $part) {
-                                    // Нормализуем неразрывные пробелы и разные тире
-                                    $part = str_replace(["\xc2\xa0", "\xe2\x80\x93", "\xe2\x80\x94"], [' ', '-', '-'], $part);
-                                    $part = trim($part);
-
-                                    // Диапазон: "05.05.2026 - 07.05.2026" или "05.05.26 - 07.05.26"
-                                    if (preg_match('/^(\d{2}\.\d{2}\.[\d]+)\s*-+\s*(\d{2}\.\d{2}\.[\d]+)/', $part, $r)) {
-                                        $dateLines[] = $r[1];
-                                        $dateLines[] = $r[2];
-                                    }
-                                    // Одна дата с временем: "08.04.2026 18:15"
-                                    elseif (preg_match('/^(\d{2}\.\d{2}\.[\d]+)(?:\s+(\d{2}:\d{2}))?/', $part, $r)) {
-                                        $dateLines[] = $r[1];
-                                        if (!empty($r[2])) $dateLines[] = $r[2];
-                                    } else {
-                                        $dateLines[] = $part;
-                                    }
-                                }
-                            }
+                            $bl = rfs_bracket_lines($match->score_or_date);
                         @endphp
-                        <div class="rfs-bracket__match {{ !$isActualScore ? 'rfs-bracket__match--upcoming' : '' }}">
-                            {{-- Команда 1 --}}
-                            <div class="rfs-bracket__team">
-                                @if($logo1)
-                                    <img class="rfs-bracket__logo" src="{{ $logo1 }}" alt="{{ $match->team1 }}">
-                                @else
-                                    <div class="rfs-bracket__logo-placeholder">{{ mb_strtoupper(mb_substr($match->team1, 0, 2)) }}</div>
-                                @endif
-                                <span class="rfs-bracket__team-name">{{ $match->team1 }}</span>
-                            </div>
-                            {{-- Счёт / Дата --}}
-                            <div class="rfs-bracket__scores">
-                                @if($isActualScore)
-                                    @foreach($scores as $score)
-                                        <span class="rfs-bracket__score">{{ $score }}</span>
-                                    @endforeach
-                                @else
-                                    @foreach($dateLines as $line)
-                                        <span class="rfs-bracket__date">{{ $line }}</span>
-                                    @endforeach
-                                @endif
-                            </div>
-                            {{-- Команда 2 --}}
-                            <div class="rfs-bracket__team">
-                                @if($logo2)
-                                    <img class="rfs-bracket__logo" src="{{ $logo2 }}" alt="{{ $match->team2 }}">
-                                @else
-                                    <div class="rfs-bracket__logo-placeholder">{{ mb_strtoupper(mb_substr($match->team2, 0, 2)) }}</div>
-                                @endif
-                                <span class="rfs-bracket__team-name">{{ $match->team2 }}</span>
-                            </div>
-                        </div>
+                        <x-bracket-match
+                            :team1="$match->team1"
+                            :team2="$match->team2"
+                            :logo1="$logo1"
+                            :logo2="$logo2"
+                            :is-score="$bl['isScore']"
+                            :lines="$bl['lines']"
+                        />
                     @else
-                        {{-- Пустой слот — "?" --}}
-                        <div class="rfs-bracket__match rfs-bracket__match--empty">
-                            <div class="rfs-bracket__team">
-                                <div class="rfs-bracket__logo-placeholder rfs-bracket__logo-placeholder--unknown">?</div>
-                                <span class="rfs-bracket__team-name rfs-bracket__team-name--unknown">TBD</span>
-                            </div>
-                            <div class="rfs-bracket__scores"></div>
-                            <div class="rfs-bracket__team">
-                                <div class="rfs-bracket__logo-placeholder rfs-bracket__logo-placeholder--unknown">?</div>
-                                <span class="rfs-bracket__team-name rfs-bracket__team-name--unknown">TBD</span>
-                            </div>
-                        </div>
+                        <x-bracket-match :empty="true" />
                     @endif
                     @endfor
                 </div>
@@ -293,7 +237,7 @@
 <div id="regions-tab-rounds">
     <div class="rfs-header">
         <div class="rfs__title">Путь регионов</div>
-        <div class="table__buttons rfs-header__buttons">
+        <div class="rfs-header__buttons">
             <button class="button is-active" type="button" id="regions-btn-rounds">
                 <div class="button__text">Раунды</div>
             </button>
@@ -323,19 +267,13 @@
                             @endphp
                             <tr class="table__row">
                                 <td class="table__cell table__cell--team rfs-cell-club">
-                                    <div class="rfs-club">
-                                        @if($logo1r)<img src="{{ $logo1r }}" alt="{{ $match->team1 }}" loading="lazy">@endif
-                                        <span>{{ $match->team1 }}</span>
-                                    </div>
+                                    <x-team-logo :name="$match->team1" :logo="$logo1r" />
                                 </td>
                                 <td class="table__cell rfs-cell-bold {{ $match->is_played ? 'color-red' : '' }}" style="text-align:center; white-space:nowrap;">
                                     {{ $match->score_or_date }}
                                 </td>
                                 <td class="table__cell table__cell--team rfs-cell-club">
-                                    <div class="rfs-club">
-                                        @if($logo2r)<img src="{{ $logo2r }}" alt="{{ $match->team2 }}" loading="lazy">@endif
-                                        <span>{{ $match->team2 }}</span>
-                                    </div>
+                                    <x-team-logo :name="$match->team2" :logo="$logo2r" />
                                 </td>
                             </tr>
                             @endforeach
@@ -362,7 +300,7 @@
 <div id="regions-tab-playoff" style="display:none;">
     <div class="rfs-header">
         <div class="rfs__title">Путь регионов. Плей-офф</div>
-        <div class="table__buttons rfs-header__buttons">
+        <div class="rfs-header__buttons">
             <button class="button" type="button" id="regions-btn-rounds2">
                 <div class="button__text">Раунды</div>
             </button>
@@ -383,48 +321,18 @@
                         @php
                             $logo1r = $match->team1_logo ?: ($teamLogos[$match->team1] ?? null);
                             $logo2r = $match->team2_logo ?: ($teamLogos[$match->team2] ?? null);
-                            $parts  = array_map('trim', explode(' | ', $match->score_or_date));
-                            $isActualScore = (bool) preg_match('/^\d+:\d+$/', $parts[0] ?? '');
-                            $scores = $isActualScore ? $parts : [];
-                            $dateLines = [];
-                            if (!$isActualScore) {
-                                foreach ($parts as $part) {
-                                    $part = str_replace(["\xc2\xa0", "\xe2\x80\x93", "\xe2\x80\x94"], [' ', '-', '-'], $part);
-                                    $part = trim($part);
-                                    if (preg_match('/^(\d{2}\.\d{2}\.[\d]+)\s*-+\s*(\d{2}\.\d{2}\.[\d]+)/', $part, $r)) {
-                                        $dateLines[] = $r[1]; $dateLines[] = $r[2];
-                                    } elseif (preg_match('/^(\d{2}\.\d{2}\.[\d]+)(?:\s+(\d{2}:\d{2}))?/', $part, $r)) {
-                                        $dateLines[] = $r[1];
-                                        if (!empty($r[2])) $dateLines[] = $r[2];
-                                    } else { $dateLines[] = $part; }
-                                }
-                            }
+                            $blr = rfs_bracket_lines($match->score_or_date);
                         @endphp
-                        <div class="rfs-bracket__match {{ !$isActualScore ? 'rfs-bracket__match--upcoming' : '' }}">
-                            <div class="rfs-bracket__team">
-                                @if($logo1r)<img class="rfs-bracket__logo" src="{{ $logo1r }}" alt="{{ $match->team1 }}">
-                                @else<div class="rfs-bracket__logo-placeholder">{{ mb_strtoupper(mb_substr($match->team1, 0, 2)) }}</div>@endif
-                                <span class="rfs-bracket__team-name">{{ $match->team1 }}</span>
-                            </div>
-                            <div class="rfs-bracket__scores">
-                                @if($isActualScore)
-                                    @foreach($scores as $score)<span class="rfs-bracket__score">{{ $score }}</span>@endforeach
-                                @else
-                                    @foreach($dateLines as $line)<span class="rfs-bracket__date">{{ $line }}</span>@endforeach
-                                @endif
-                            </div>
-                            <div class="rfs-bracket__team">
-                                @if($logo2r)<img class="rfs-bracket__logo" src="{{ $logo2r }}" alt="{{ $match->team2 }}">
-                                @else<div class="rfs-bracket__logo-placeholder">{{ mb_strtoupper(mb_substr($match->team2, 0, 2)) }}</div>@endif
-                                <span class="rfs-bracket__team-name">{{ $match->team2 }}</span>
-                            </div>
-                        </div>
+                        <x-bracket-match
+                            :team1="$match->team1"
+                            :team2="$match->team2"
+                            :logo1="$logo1r"
+                            :logo2="$logo2r"
+                            :is-score="$blr['isScore']"
+                            :lines="$blr['lines']"
+                        />
                     @else
-                        <div class="rfs-bracket__match rfs-bracket__match--empty">
-                            <div class="rfs-bracket__team"><div class="rfs-bracket__logo-placeholder rfs-bracket__logo-placeholder--unknown">?</div><span class="rfs-bracket__team-name rfs-bracket__team-name--unknown">TBD</span></div>
-                            <div class="rfs-bracket__scores"></div>
-                            <div class="rfs-bracket__team"><div class="rfs-bracket__logo-placeholder rfs-bracket__logo-placeholder--unknown">?</div><span class="rfs-bracket__team-name rfs-bracket__team-name--unknown">TBD</span></div>
-                        </div>
+                        <x-bracket-match :empty="true" />
                     @endif
                     @endfor
                 </div>
@@ -439,85 +347,14 @@
 ════════════════════════════════════════════ --}}
 @include('components.upcoming-matches', ['sport' => 'rfs', 'matches' => \App\Models\UpcomingMatch::where('sport', 'rfs')->where('league_name', 'LIKE', 'Путь регионов%')->where('match_at', '>=', now())->orderBy('match_at')->get()])
 
+@include('partials.tab-switcher')
 <script>
-(function () {
-    var tabTable   = document.getElementById('rfs-tab-table');
-    var tabPlayoff = document.getElementById('rfs-tab-playoff');
-
-    function showTable() {
-        tabTable.style.display   = 'block';
-        tabPlayoff.style.display = 'none';
-        ['rfs-btn-table','rfs-btn-table2'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.classList.add('is-active');
-        });
-        ['rfs-btn-playoff','rfs-btn-playoff2'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.classList.remove('is-active');
-        });
-    }
-
-    function showPlayoff() {
-        tabPlayoff.style.display = 'block';
-        tabTable.style.display   = 'none';
-        ['rfs-btn-playoff','rfs-btn-playoff2'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.classList.add('is-active');
-        });
-        ['rfs-btn-table','rfs-btn-table2'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.classList.remove('is-active');
-        });
-    }
-
-    ['rfs-btn-table','rfs-btn-table2'].forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) el.addEventListener('click', showTable);
-    });
-    ['rfs-btn-playoff','rfs-btn-playoff2'].forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) el.addEventListener('click', showPlayoff);
-    });
-})();
-
-// Путь регионов
-(function () {
-    var tabRounds  = document.getElementById('regions-tab-rounds');
-    var tabPlayoff = document.getElementById('regions-tab-playoff');
-
-    function showRounds() {
-        tabRounds.style.display  = 'block';
-        tabPlayoff.style.display = 'none';
-        ['regions-btn-rounds','regions-btn-rounds2'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.classList.add('is-active');
-        });
-        ['regions-btn-playoff','regions-btn-playoff2'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.classList.remove('is-active');
-        });
-    }
-
-    function showPlayoff() {
-        tabPlayoff.style.display = 'block';
-        tabRounds.style.display  = 'none';
-        ['regions-btn-playoff','regions-btn-playoff2'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.classList.add('is-active');
-        });
-        ['regions-btn-rounds','regions-btn-rounds2'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.classList.remove('is-active');
-        });
-    }
-
-    ['regions-btn-rounds','regions-btn-rounds2'].forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) el.addEventListener('click', showRounds);
-    });
-    ['regions-btn-playoff','regions-btn-playoff2'].forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) el.addEventListener('click', showPlayoff);
-    });
-})();
+initTabSwitcher(
+    { table: 'rfs-tab-table', playoff: 'rfs-tab-playoff' },
+    { table: ['rfs-btn-table', 'rfs-btn-table2'], playoff: ['rfs-btn-playoff', 'rfs-btn-playoff2'] }
+);
+initTabSwitcher(
+    { rounds: 'regions-tab-rounds', playoff: 'regions-tab-playoff' },
+    { rounds: ['regions-btn-rounds', 'regions-btn-rounds2'], playoff: ['regions-btn-playoff', 'regions-btn-playoff2'] }
+);
 </script>

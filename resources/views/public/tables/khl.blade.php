@@ -127,63 +127,6 @@
     $divKharlamov  = $standings->where('division', 'Харламова')->values();
     $divTarasov    = $standings->where('division', 'Тарасова')->values();
     $divChernyshov = $standings->where('division', 'Чернышёва')->values();
-
-    function khl_table($rows, string $title): void {
-    ?>
-    <div class="khl-table table__wrapper is-active" style="display:block;">
-        <div class="table__item is-active">
-            <div class="khl-table__header"><?= e($title) ?></div>
-            <div class="table__container">
-                <?php if ($rows->isNotEmpty()): ?>
-                <table class="khl-standings-table">
-                    <tbody class="table__body">
-                        <tr class="table__row">
-                            <td class="table__cell khl-col-rank">№</td>
-                            <td class="table__cell khl-col-team">Клуб</td>
-                            <td class="table__cell khl-col-stat">И</td>
-                            <td class="table__cell khl-col-stat">В</td>
-                            <td class="table__cell khl-col-stat">ВО</td>
-                            <td class="table__cell khl-col-stat">ВБ</td>
-                            <td class="table__cell khl-col-stat">ПБ</td>
-                            <td class="table__cell khl-col-stat">ПО</td>
-                            <td class="table__cell khl-col-stat">ПП</td>
-                            <td class="table__cell khl-col-stat">П</td>
-                            <td class="table__cell khl-col-goals">Ш</td>
-                            <td class="table__cell khl-col-stat">О</td>
-                        </tr>
-                        <?php foreach ($rows as $i => $row): ?>
-                        <tr class="table__row">
-                            <td class="table__cell khl-col-rank fw-900"><?= $i + 1 ?></td>
-                            <td class="table__cell khl-col-team">
-                                <div class="khl-team-cell">
-                                    <?php if ($row->logo): ?>
-                                        <img class="khl-team-cell__logo" src="<?= e($row->logo) ?>" alt="<?= e($row->team) ?>" loading="lazy">
-                                    <?php endif; ?>
-                                    <span class="khl-team-cell__name fw-900"><?= e($row->team) ?></span>
-                                </div>
-                            </td>
-                            <td class="table__cell khl-col-stat"><?= e($row->games) ?></td>
-                            <td class="table__cell khl-col-stat"><?= e($row->wins) ?></td>
-                            <td class="table__cell khl-col-stat"><?= e($row->ot_wins) ?></td>
-                            <td class="table__cell khl-col-stat"><?= e($row->so_wins) ?></td>
-                            <td class="table__cell khl-col-stat"><?= e($row->so_losses) ?></td>
-                            <td class="table__cell khl-col-stat"><?= e($row->ot_losses) ?></td>
-                            <td class="table__cell khl-col-stat"><?= e($row->pp) ?></td>
-                            <td class="table__cell khl-col-stat"><?= e($row->losses) ?></td>
-                            <td class="table__cell khl-col-goals"><?= e($row->goals) ?></td>
-                            <td class="table__cell khl-col-stat color-red fw-900"><?= e($row->points) ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <?php else: ?>
-                    <p style="padding: 20px;">Нет данных.</p>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-    <?php
-    }
 @endphp
 
 {{-- ═══ Единая секция: ТУРНИРНАЯ ТАБЛИЦА ══════════════════ --}}
@@ -192,7 +135,7 @@
     {{-- Постоянный заголовок с кнопками --}}
     <div class="rfs-header">
         <div class="rfs__title">ТУРНИРНАЯ ТАБЛИЦА</div>
-        <div class="table__buttons rfs-header__buttons khl-tab-buttons">
+        <div class="khl-tab-buttons">
             <button class="button" type="button" id="khl-btn-conf">ПО КОНФЕРЕНЦИЯМ</button>
             <button class="button" type="button" id="khl-btn-div">ПО ДИВИЗИОНАМ</button>
             <button class="button is-active" type="button" id="khl-btn-champ">ЧЕМПИОНАТ</button>
@@ -201,15 +144,15 @@
 
     {{-- Вкладка: ЧЕМПИОНАТ --}}
     <div id="khl-tab-champ" style="padding-top: calc(20 * 100vw / 1920);">
-        @php khl_table($standings, 'КХЛ') @endphp
+        @include('partials.khl-standings-table', ['rows' => $standings, 'title' => 'КХЛ'])
     </div>
 
     {{-- Вкладка: ПО КОНФЕРЕНЦИЯМ --}}
     <div id="khl-tab-conf" style="display:none;">
         @if($hasDivData)
             <div class="khl-grid-2col">
-                @php khl_table($western, 'Западная конференция') @endphp
-                @php khl_table($eastern, 'Восточная конференция') @endphp
+                @include('partials.khl-standings-table', ['rows' => $western,  'title' => 'Западная конференция'])
+                @include('partials.khl-standings-table', ['rows' => $eastern,  'title' => 'Восточная конференция'])
             </div>
         @else
             <div style="padding: 20px;">Данные будут доступны после следующего запуска парсера.</div>
@@ -220,10 +163,10 @@
     <div id="khl-tab-div" style="display:none;">
         @if($hasDivData)
             <div class="khl-grid-2col">
-                @php khl_table($divBobrova,    'Дивизион Боброва') @endphp
-                @php khl_table($divKharlamov,  'Дивизион Харламова') @endphp
-                @php khl_table($divTarasov,    'Дивизион Тарасова') @endphp
-                @php khl_table($divChernyshov, 'Дивизион Чернышёва') @endphp
+                @include('partials.khl-standings-table', ['rows' => $divBobrova,    'title' => 'Дивизион Боброва'])
+                @include('partials.khl-standings-table', ['rows' => $divKharlamov,  'title' => 'Дивизион Харламова'])
+                @include('partials.khl-standings-table', ['rows' => $divTarasov,    'title' => 'Дивизион Тарасова'])
+                @include('partials.khl-standings-table', ['rows' => $divChernyshov, 'title' => 'Дивизион Чернышёва'])
             </div>
         @else
             <div style="padding: 20px;">Данные будут доступны после следующего запуска парсера.</div>
@@ -234,36 +177,10 @@
 
 @include('components.upcoming-matches', ['sport' => 'khl'])
 
+@include('partials.tab-switcher')
 <script>
-(function () {
-    var tabs = {
-        champ: document.getElementById('khl-tab-champ'),
-        conf:  document.getElementById('khl-tab-conf'),
-        div:   document.getElementById('khl-tab-div'),
-    };
-    var btns = {
-        champ: ['khl-btn-champ'],
-        conf:  ['khl-btn-conf'],
-        div:   ['khl-btn-div'],
-    };
-
-    function showTab(active) {
-        Object.keys(tabs).forEach(function (key) {
-            tabs[key].style.display = key === active ? 'block' : 'none';
-        });
-        Object.keys(btns).forEach(function (key) {
-            btns[key].forEach(function (id) {
-                var el = document.getElementById(id);
-                if (el) el.classList.toggle('is-active', key === active);
-            });
-        });
-    }
-
-    Object.keys(btns).forEach(function (key) {
-        btns[key].forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el) el.addEventListener('click', function () { showTab(key); });
-        });
-    });
-})();
+initTabSwitcher(
+    { champ: 'khl-tab-champ', conf: 'khl-tab-conf', div: 'khl-tab-div' },
+    { champ: ['khl-btn-champ'], conf: ['khl-btn-conf'], div: ['khl-btn-div'] }
+);
 </script>

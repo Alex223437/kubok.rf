@@ -1,0 +1,136 @@
+/* ─────────────────────────────────────────
+   Баскетбол — таблица чемпионата
+───────────────────────────────────────── */
+
+/* Подключаем стили rfs для общих блоков (заголовок, плей-офф, ближайшие матчи) */
+@import url('/assets/rfs.css');
+
+/* Заголовки колонок */
+.bsk-cell-hdr {
+    font-size: calc(16 * 100vw / 1920);
+    font-weight: 400;
+    font-style: normal;
+    line-height: normal;
+    text-transform: uppercase;
+    color: #000;
+}
+
+/* Колонка "Клуб" */
+.bsk-cell-club {
+    font-weight: 500;
+    font-size: calc(24 * 100vw / 1920);
+    color: #000;
+}
+
+.bsk-cell-hdr + .bsk-cell-club {
+   text-transform: none;
+    font-size: calc(16 * 100vw / 1920);
+    font-weight: 400;
+    font-style: normal;
+    line-height: normal;
+    color: #000;
+}
+
+/* Числовые ячейки */
+.bsk-cell-num {
+    font-size: calc(24 * 100vw / 1920);
+    font-weight: 700;
+    color: #000;
+}
+
+/* Ячейка "Очки" — красная */
+.bsk-cell-pts {
+    font-size: calc(24 * 100vw / 1920);
+    font-weight: 700;
+    color: #e80024;
+}
+
+/* Ячейка с последними 5 матчами */
+.bsk-cell-last5 {
+    white-space: nowrap;
+    text-align: center;
+    width: calc(100 * 100vw / 1920);
+}
+
+.bsk-cell-last5 svg {
+    display: inline-block;
+    width: calc(80 * 100vw / 1920);
+    height: calc(12 * 100vw / 1920);
+}
+
+/* Секция таблицы */
+.bsk-table-section {
+    padding-bottom: calc(20 * 100vw / 1920);
+}
+
+.bsk-table-section + .bsk-table-section {
+    padding-top: calc(10 * 100vw / 1920);
+}
+
+/* Плей-ин — горизонтальный ряд карточек */
+.bsk-bracket--playin {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(16 * 100vw / 1920);
+    padding: 0 0 calc(20 * 100vw / 1920);
+}
+
+.bsk-bracket--playin .rfs-bracket__match {
+    flex: 1 1 calc(280 * 100vw / 1920);
+    max-width: calc(400 * 100vw / 1920);
+}
+
+/* Таб-контейнеры — белый фон как в rfs */
+#bsk-tab-standings,
+#bsk-tab-playoff {
+    background: #fff;
+    margin: 0 calc(-40 * 100vw / 1920);
+    padding: 0 calc(40 * 100vw / 1920) calc(40 * 100vw / 1920);
+}
+
+#bsk-tab-standings .rfs-header,
+#bsk-tab-playoff .rfs-header {
+    margin: 0 calc(-40 * 100vw / 1920);
+    padding-left: calc(80 * 100vw / 1920);
+    padding-right: calc(80 * 100vw / 1920);
+}
+
+.bsk-playoff, .bsk-bracket--playoff {
+    padding-bottom: 0;
+}
+
+@media (max-width: 1024px) {
+    .bsk-cell-hdr { font-size: 11px; }
+    .bsk-cell-club { font-size: 13px; }
+    .bsk-cell-num { font-size: 13px; }
+    .bsk-cell-pts { font-size: 13px; }
+
+    .bsk-cell-last5 {
+        width: 70px;
+    }
+    .bsk-cell-last5 svg {
+        width: 56px;
+        height: 9px;
+    }
+
+    #bsk-tab-standings,
+    #bsk-tab-playoff {
+        margin: 0 calc(-10 * 100vw / 1920);
+        padding: 0 calc(10 * 100vw / 1920) 24px;
+    }
+
+    #bsk-tab-standings .rfs-header,
+    #bsk-tab-playoff .rfs-header {
+        margin: 0 calc(-10 * 100vw / 1920);
+        padding-left: calc(10 * 100vw / 1920);
+        padding-right: calc(10 * 100vw / 1920);
+    }
+
+    .bsk-bracket--playin {
+        flex-direction: column;
+    }
+
+    .bsk-bracket--playin .rfs-bracket__match {
+        max-width: 100%;
+    }
+}

@@ -92,7 +92,8 @@
       "Bash(grep -r \"table__wrapper\\\\|table__buttons\" /Users/aliaksei/Work/kubok/kubok.rf/public/assets/*.css)",
       "Bash(find /Users/aliaksei/Work/kubok/kubok.rf/resources/views -name \"*.blade.php\" -exec grep -l \"@component\\\\|@include\" {})",
       "Bash(find /Users/aliaksei/Work/kubok/kubok.rf/public/assets -name \"*.css\" -exec basename {})",
-      "Bash(ls -lh /Users/aliaksei/Work/kubok/kubok.rf/public/assets/*.css)"
+      "Bash(ls -lh /Users/aliaksei/Work/kubok/kubok.rf/public/assets/*.css)",
+      "mcp__claude_ai_VPS__shell"
     ]
   }
 }
