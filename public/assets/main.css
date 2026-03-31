@@ -1328,11 +1328,10 @@ iframe {
         display: none;
         border-width: 2px;
         border-bottom: none;
-        border-radius: calc(20*100vw / 1920);
-        border-radius: calc(20*var(--width-multiplier));
         width: 100%;
         min-height: calc(118*100vw / 1920);
-        min-height: calc(118*var(--width-multiplier))
+        min-height: calc(118*var(--width-multiplier));
+        border-radius: 30px;
     }
 
     .table__item.is-active {
@@ -4188,7 +4187,8 @@ iframe {
     }
 
     .khl-table .table__container {
-        border-radius: 0
+        border-radius: 27px;
+        top: -2px;
     }
 
     .khl-table__logo-cell {

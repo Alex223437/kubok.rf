@@ -89,7 +89,7 @@
 .rfs-header__buttons .button .button__text {
     display: flex;
     align-items: center;
-    
+
 }
 
 .rfs-header__buttons .button:first-child {
@@ -327,19 +327,19 @@
         padding: 0 calc(10 * 100vw / 1920) 40px;
     }
     .rfs-upcoming__header { margin-bottom: 16px; }
-    .rfs-upcoming__arrow-wrapper { width: 40px; height: 40px; }
-    .rfs-upcoming__arrow-icon { width: 22px; height: 14px; }
+    .rfs-upcoming__arrow-wrapper { width: 30px; height: 30px; }
+    .rfs-upcoming__arrow-icon { width: 16px; height: 9px; }
     .rfs-upcoming__arrows { gap: 8px; }
-    .rfs-upcoming__scroll { gap: 12px; }
 
-    .rfs-mcard { flex: 0 0 200px; border-radius: 20px; border-width: 2px; }
+    .rfs-mcard { flex: 0 0 calc(50% - 3px); border-radius: 20px; border-width: 2px; }
     .rfs-mcard__header { font-size: 12px; padding: 10px 14px; }
     .rfs-mcard__body { border-radius: 16px 16px 0 0; padding: 12px 14px; gap: 6px; }
-    .rfs-mcard__date { font-size: 28px; }
-    .rfs-mcard__time { font-size: 11px; }
+    .rfs-mcard__date { font-size: 24px; }
+    .rfs-mcard__time { font-size: 14px; }
     .rfs-mcard__logo { width: 30px; height: 30px; font-size: 8px; }
-    .rfs-mcard__team-name { font-size: 13px; }
-    .rfs-mcard__city { font-size: 10px; }
+    .rfs-mcard__logo img { width: 30px; height: 30px; }
+    .rfs-mcard__team-name { font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rfs-mcard__city { font-size: 14px; }
     .rfs-mcard__teams { gap: 4px; }
     .rfs-mcard__sep { font-size: 13px;}
     .rfs-mcard__team { gap: 8px; }
@@ -540,7 +540,7 @@
     }
 
     .rfs-upcoming__scroll {
-        gap: 12px;
+        gap: 5px;
     }
 
     .rfs-bracket {

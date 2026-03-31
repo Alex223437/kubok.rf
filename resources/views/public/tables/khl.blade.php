@@ -18,7 +18,7 @@
 .khl-tab-buttons .button {
     margin-right: 0 !important;
     color: #000;
-    font-size: 20px;
+    font-size: 24px;
     font-style: normal;
     font-weight: 500;
     line-height: normal;
@@ -99,13 +99,91 @@
         padding-left: calc(10 * 100vw / 1920);
         padding-right: calc(10 * 100vw / 1920);
     }
+    /* Кнопки: первые две в ряд, третья по центру на новой строке */
+    .khl-tab-buttons {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .khl-tab-buttons .button {
+        font-size: 16px;
+        height: 40px;
+        padding: 4px 10px;
+        white-space: nowrap;
+        width: 100%;
+       
+    }
+    .khl-tab-buttons .button:last-child {
+        grid-column: 1 / -1;
+        justify-self: center;
+        min-width: 50%;
+        width: fit-content;
+    }
+    /* Отступ между блоком кнопок и таблицей, между таблицами */
+    #khl-tab-champ,
+    #khl-tab-conf,
+    #khl-tab-div {
+        padding-top: 18px;
+    }
     .khl-grid-2col {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 18px;
+        padding-top: 0;
+    }
+    /* Паддинг контейнера таблицы: top right bottom left */
+    .khl-table .table__container {
+        padding: 15px 15px 25px 15px;
+        border-radius: 27px !important;
+    }
+    /* Минимальная ширина чёрного хедера */
+    .khl-table__header {
+        min-height: 50px;
+        display: flex;
+        align-items: center;
+    }
+    /* Колонки таблицы: auto-layout, цифры сжимаются до контента, клуб растягивается */
+    .khl-standings-table {
+        table-layout: auto;
     }
     .khl-col-rank {
-        width: 28px;
+        width: 1px;
+        min-width: 20px;
+        white-space: nowrap;
     }
+    .khl-col-stat,
+    .khl-col-goals {
+        width: 1px;
+        min-width: 28px;
+        white-space: nowrap;
+    }
+    .khl-col-team {
+        width: auto;
+        max-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    /* Скрываем: ПБ(7), ПО(8), ПП(9), П(10), Ш(11) */
+    .khl-standings-table tr td:nth-child(7),
+    .khl-standings-table tr th:nth-child(7),
+    .khl-standings-table tr td:nth-child(8),
+    .khl-standings-table tr th:nth-child(8),
+    .khl-standings-table tr td:nth-child(9),
+    .khl-standings-table tr th:nth-child(9),
+    .khl-standings-table tr td:nth-child(10),
+    .khl-standings-table tr th:nth-child(10),
+    .khl-standings-table tr td:nth-child(11),
+    .khl-standings-table tr th:nth-child(11) {
+        display: none;
+    }
+    /* Размер шрифта в таблице */
+    .khl-standings-table .table__cell {
+        font-size: 18px;
+    }
+    .khl-table__header {
+        font-size: 16px;
+    }
+    /* Команда */
     .khl-team-cell__logo {
         width: 24px;
         height: 24px;
