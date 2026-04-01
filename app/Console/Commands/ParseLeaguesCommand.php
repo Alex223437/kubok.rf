@@ -151,11 +151,11 @@ class ParseLeaguesCommand extends Command
             $this->info('Parsing Basketball standings...');
             $tags = ['msl', 'wsl', 'mhl', 'whl', 'wpremier'];
 
-            try {
-                BasketballStanding::truncate();
-                BasketballPlayoffPair::truncate();
+            BasketballStanding::truncate();
+            BasketballPlayoffPair::truncate();
 
-                foreach ($tags as $tag) {
+            foreach ($tags as $tag) {
+                try {
                     $this->info("Fetching standings for tag: {$tag}");
                     $basketData = $basketballParser->parse($tag);
 
@@ -231,9 +231,9 @@ class ParseLeaguesCommand extends Command
                     if ($upcomingCount > 0) {
                         $this->info("Upcoming basketball matches synced for {$tag}: {$upcomingCount}");
                     }
+                } catch (\Exception $e) {
+                    $this->error("Basketball parsing error for {$tag}: " . $e->getMessage() . " on line " . $e->getLine());
                 }
-            } catch (\Exception $e) {
-                $this->error('Basketball parsing error: ' . $e->getMessage() . " on line " . $e->getLine());
             }
         }
 
