@@ -47,19 +47,13 @@
     padding-bottom: 0;
 }
 
-#rfs-tab-table,
-#rfs-tab-playoff,
-#regions-tab-rounds,
-#regions-tab-playoff {
+#rfs-section {
     background: #fff;
     margin: 0 calc(-40 * 100vw / 1920);
     padding: 0 calc(40 * 100vw / 1920) calc(40 * 100vw / 1920);
 }
 
-#rfs-tab-table .rfs-header,
-#rfs-tab-playoff .rfs-header,
-#regions-tab-rounds .rfs-header,
-#regions-tab-playoff .rfs-header {
+#rfs-section .rfs-header {
     margin: 0 calc(-40 * 100vw / 1920);
     padding-left: calc(80 * 100vw / 1920);
     padding-right: calc(80 * 100vw / 1920);
@@ -75,44 +69,39 @@
     top: auto !important;
     margin-right: 0 !important;
     display: flex;
+    gap: 12px;
 }
 
 .rfs-header__buttons .button {
-    border: 2px solid #e80024;
-    width: calc(240 * 100vw / 1920);
-    background-color: #fff;
+    margin-right: 0 !important;
+    color: #000;
+    font-size: calc(20 * 100vw / 1920);
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    border-radius: 50px;
+    border: 1px solid #e80024;
     display: flex;
-    align-items: center;
+    height: 45px;
+    padding: 6px 15px 4px 15px;
     justify-content: center;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    width: fit-content;
 }
 
 .rfs-header__buttons .button .button__text {
     display: flex;
     align-items: center;
-
-}
-
-.rfs-header__buttons .button:first-child {
-    margin-right: calc(20 * 100vw / 1920);
 }
 
 .rfs-header__buttons .button.is-active {
     color: #fff;
-    background-color: #e80024;
+    background: #e80024;
+    border-color: #e80024;
 }
 
-@media (max-width: 1024px) {
-    .rfs-header__buttons .button {
-        width: calc(175 * 100vw / 1920);
-        height: calc(28 * 100vw / 1920);
-    }
-    .rfs-header__buttons .button:first-child {
-        margin-right: calc(5 * 100vw / 1920);
-    }
-    .rfs-header__buttons .button:last-child {
-        width: calc(173 * 100vw / 1920);
-    }
-}
 
 /* ─────────────────────────────────────────
    RFS — ближайшие матчи (новый дизайн)
@@ -216,6 +205,10 @@
     line-height: 1.2;
 }
 
+.rfs-mcard__br {
+    display: none;
+}
+
 .rfs-mcard__body {
     background: #fff;
     border-radius: calc(30 * 100vw / 1920) calc(30 * 100vw / 1920) 0 0;
@@ -279,6 +272,7 @@
     display: flex;
     flex-direction: column;
     gap: calc(2 * 100vw / 1920);
+    min-width: 0;
 }
 
 .rfs-mcard__team-name {
@@ -286,6 +280,9 @@
     font-weight: 500;
     color: #000;
     line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .rfs-mcard__city {
@@ -307,20 +304,72 @@
         gap: 12px;
         padding-bottom: 0;
     }
-    #rfs-tab-table .rfs-header,
-    #rfs-tab-playoff .rfs-header,
-    #regions-tab-rounds .rfs-header,
-    #regions-tab-playoff .rfs-header {
+    #rfs-section {
+        margin: 0 calc(-10 * 100vw / 1920);
+        padding: 0 calc(10 * 100vw / 1920) 24px;
+    }
+    #rfs-section .rfs-header {
         margin: 0 calc(-10 * 100vw / 1920);
         padding-left: calc(10 * 100vw / 1920);
         padding-right: calc(10 * 100vw / 1920);
+        padding-bottom: 0;
     }
+    /* Отступ 18px сверху у каждой вкладки */
     #rfs-tab-table,
     #rfs-tab-playoff,
-    #regions-tab-rounds,
-    #regions-tab-playoff {
-        margin: 0 calc(-10 * 100vw / 1920);
-        padding: 0 calc(10 * 100vw / 1920) 24px;
+    #rfs-tab-regions {
+        padding-top: 18px;
+    }
+    /* Кнопки переключения */
+    .rfs-header__buttons {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .rfs-header__buttons .button {
+        font-size: 16px;
+        height: 40px;
+        padding: 4px 10px;
+        white-space: nowrap;
+        width: 100%;
+    }
+    .rfs-header__buttons--triple .button:last-child {
+        grid-column: 1 / -1;
+        justify-self: center;
+        min-width: 50%;
+        width: fit-content;
+    }
+    /* Таблицы групп */
+    .khl-table .table__container {
+        padding: 15px 15px 25px 15px;
+        border-radius: 30px !important;
+    }
+    .khl-table__header {
+        min-height: 50px;
+        display: flex;
+        align-items: center;
+    }
+    .khl-table .table__cell { font-size: 18px; }
+    /* Колонка «Клуб» — ellipsis */
+    .khl-table .khl-standings-table,
+    .rfs-groups-section table {
+        table-layout: auto;
+    }
+    .rfs-cell-club {
+        max-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    /* Скрываем в таблице групп: ВП(5), ПП(7), М(8) */
+    .rfs-groups-section table tr td:nth-child(5),
+    .rfs-groups-section table tr th:nth-child(5),
+    .rfs-groups-section table tr td:nth-child(7),
+    .rfs-groups-section table tr th:nth-child(7),
+    .rfs-groups-section table tr td:nth-child(8),
+    .rfs-groups-section table tr th:nth-child(8) {
+        display: none;
     }
     .rfs-upcoming-section {
         margin: 0 calc(-10 * 100vw / 1920);
@@ -333,6 +382,7 @@
 
     .rfs-mcard { flex: 0 0 calc(50% - 3px); border-radius: 20px; border-width: 2px; }
     .rfs-mcard__header { font-size: 12px; padding: 10px 14px; }
+    .rfs-mcard__br { display: inline; }
     .rfs-mcard__body { border-radius: 16px 16px 0 0; padding: 12px 14px; gap: 6px; }
     .rfs-mcard__date { font-size: 24px; }
     .rfs-mcard__time { font-size: 14px; }
@@ -568,7 +618,7 @@
     .table__wrapper.rfs-groups-grid.is-active {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 18px;
     }
 }
 

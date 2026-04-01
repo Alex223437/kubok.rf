@@ -15,16 +15,7 @@
     // Плей-офф РПЛ
     $playoffMatches = $allMatches->where('group_name', 'Путь РПЛ. Плей-офф');
 
-    // Путь регионов: раунды и плей-офф
-    $regionsRoundNames = [
-        'Путь регионов. Раунд 1',
-        'Путь регионов. Раунд 2',
-        'Путь регионов. Раунд 3',
-        'Путь регионов. Раунд 4',
-        'Путь регионов. Раунд 5',
-        'Путь регионов. Раунд 6',
-    ];
-    $regionsRounds = $allMatches->whereIn('group_name', $regionsRoundNames);
+    // Путь регионов: плей-офф
     $regionsPlayoff = $allMatches->where('group_name', 'Путь регионов. Плей-офф');
 
     // Считаем турнирные таблицы из результатов групповых матчей (только Путь РПЛ. Группа *)
@@ -107,23 +98,48 @@
         }
         return ['isScore' => false, 'lines' => $lines];
     }
+
+    // Плей-офф регионов
+    $regionsPlayoffSorted = $regionsPlayoff->sortBy('id')->values();
+    $regionsRoundsPlayoff = [
+        ['title' => '1/2 ФИНАЛА', 'matches' => $regionsPlayoffSorted->slice(0, 2)->values(), 'slots' => 2],
+        ['title' => 'ФИНАЛ',      'matches' => $regionsPlayoffSorted->slice(2, 1)->values(), 'slots' => 1],
+    ];
+
+    // Плей-офф РПЛ
+    $playoffSorted = $playoffMatches->sortBy('id')->values();
+    $rounds = [
+        ['title' => '1/4 ФИНАЛА', 'matches' => $playoffSorted->slice(0, 4)->values(), 'slots' => 4],
+        ['title' => '1/2 ФИНАЛА', 'matches' => $playoffSorted->slice(4, 2)->values(), 'slots' => 2],
+        ['title' => 'ФИНАЛ',      'matches' => $playoffSorted->slice(6, 1)->values(), 'slots' => 1],
+    ];
 @endphp
 
 {{-- ═══════════════════════════════════════════
-     Вкладка: ТАБЛИЦА
+     Единая секция с шапкой и вкладками
+════════════════════════════════════════════ --}}
+<div id="rfs-section">
+
+{{-- Единая шапка с 3 кнопками --}}
+<div class="rfs-header">
+    <div class="rfs__title">Турнирная таблица</div>
+    <div class="rfs-header__buttons rfs-header__buttons--triple">
+        <button class="button is-active" type="button" id="rfs-btn-table">
+            <div class="button__text">Путь РПЛ: Групповой этап</div>
+        </button>
+        <button class="button" type="button" id="rfs-btn-playoff">
+            <div class="button__text">Путь РПЛ: Плей-офф</div>
+        </button>
+        <button class="button" type="button" id="rfs-btn-regions">
+            <div class="button__text">Путь регионов</div>
+        </button>
+    </div>
+</div>
+
+{{-- ═══════════════════════════════════════════
+     Вкладка: ПУТЬ РПЛ — ГРУППОВОЙ ЭТАП
 ════════════════════════════════════════════ --}}
 <div id="rfs-tab-table">
-    <div class="rfs-header">
-        <div class="rfs__title">Турнирная таблица</div>
-        <div class="rfs-header__buttons">
-            <button class="button is-active" type="button" id="rfs-btn-table">
-                <div class="button__text">Таблица</div>
-            </button>
-            <button class="button" type="button" id="rfs-btn-playoff">
-                <div class="button__text">Плей-офф</div>
-            </button>
-        </div>
-    </div>
     @if(!empty($groupStandings))
     <section class="table khl-table rfs-groups-section">
         <div class="table__wrapper is-active rfs-groups-grid" style="display:grid;">
@@ -166,33 +182,15 @@
             @endforeach
         </div>
     </section>
+    @else
+        <div style="padding: 20px;">Нет данных. Запустите парсер.</div>
     @endif
 </div>
 
 {{-- ═══════════════════════════════════════════
-     Вкладка: ПЛЕЙ-ОФФ
+     Вкладка: ПУТЬ РПЛ — ПЛЕЙ-ОФФ
 ════════════════════════════════════════════ --}}
-@php
-    $playoffSorted = $playoffMatches->sortBy('id')->values();
-    $rounds = [
-        ['title' => '1/4 ФИНАЛА', 'matches' => $playoffSorted->slice(0, 4)->values(), 'slots' => 4],
-        ['title' => '1/2 ФИНАЛА', 'matches' => $playoffSorted->slice(4, 2)->values(), 'slots' => 2],
-        ['title' => 'ФИНАЛ',      'matches' => $playoffSorted->slice(6, 1)->values(), 'slots' => 1],
-    ];
-@endphp
-
 <div id="rfs-tab-playoff" style="display:none;">
-    <div class="rfs-header">
-        <div class="rfs__title">Плей-офф</div>
-        <div class="rfs-header__buttons">
-            <button class="button" type="button" id="rfs-btn-table2">
-                <div class="button__text">Таблица</div>
-            </button>
-            <button class="button is-active" type="button" id="rfs-btn-playoff2">
-                <div class="button__text">Плей-офф</div>
-            </button>
-        </div>
-    </div>
     <section class="rfs rfs-playoff">
         <div class="rfs-bracket">
             @foreach($rounds as $round)
@@ -227,88 +225,9 @@
 </div>
 
 {{-- ═══════════════════════════════════════════
-     Секция: БЛИЖАЙШИЕ МАТЧИ (Путь РПЛ)
+     Вкладка: ПУТЬ РЕГИОНОВ — ПЛЕЙ-ОФФ
 ════════════════════════════════════════════ --}}
-@include('components.upcoming-matches', ['sport' => 'rfs', 'matches' => \App\Models\UpcomingMatch::where('sport', 'rfs')->where('league_name', 'LIKE', 'Путь РПЛ%')->where('match_at', '>=', now())->orderBy('match_at')->get()])
-
-{{-- ═══════════════════════════════════════════
-     Секция: ПУТЬ РЕГИОНОВ — ТУРНИРНАЯ ТАБЛИЦА
-════════════════════════════════════════════ --}}
-<div id="regions-tab-rounds">
-    <div class="rfs-header">
-        <div class="rfs__title">Путь регионов</div>
-        <div class="rfs-header__buttons">
-            <button class="button is-active" type="button" id="regions-btn-rounds">
-                <div class="button__text">Раунды</div>
-            </button>
-            <button class="button" type="button" id="regions-btn-playoff">
-                <div class="button__text">Плей-офф</div>
-            </button>
-        </div>
-    </div>
-    @if($regionsRounds->isNotEmpty())
-    <section class="table khl-table rfs-groups-section">
-        <div class="table__wrapper is-active rfs-groups-grid" style="display:grid;">
-            @foreach($regionsRounds->groupBy('group_name') as $roundName => $roundMatches)
-            <div class="table__item is-active">
-                <div class="khl-table__header">{{ $roundName }}</div>
-                <div class="table__container">
-                    <table>
-                        <tbody class="table__body">
-                            <tr class="table__row">
-                                <td class="table__cell rfs-cell-club">Команда 1</td>
-                                <td class="table__cell rfs-cell-bold" style="text-align:center; width:80px;">Счёт</td>
-                                <td class="table__cell rfs-cell-club">Команда 2</td>
-                            </tr>
-                            @foreach($roundMatches as $match)
-                            @php
-                                $logo1r = $match->team1_logo ?: ($teamLogos[$match->team1] ?? null);
-                                $logo2r = $match->team2_logo ?: ($teamLogos[$match->team2] ?? null);
-                            @endphp
-                            <tr class="table__row">
-                                <td class="table__cell table__cell--team rfs-cell-club">
-                                    <x-team-logo :name="$match->team1" :logo="$logo1r" />
-                                </td>
-                                <td class="table__cell rfs-cell-bold {{ $match->is_played ? 'color-red' : '' }}" style="text-align:center; white-space:nowrap;">
-                                    {{ $match->score_or_date }}
-                                </td>
-                                <td class="table__cell table__cell--team rfs-cell-club">
-                                    <x-team-logo :name="$match->team2" :logo="$logo2r" />
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            @endforeach
-        </div>
-    </section>
-    @else
-        <div style="padding: 20px;">Нет данных. Запустите парсер.</div>
-    @endif
-</div>
-
-@php
-    $regionsPlayoffSorted = $regionsPlayoff->sortBy('id')->values();
-    $regionsRoundsPlayoff = [
-        ['title' => '1/2 ФИНАЛА', 'matches' => $regionsPlayoffSorted->slice(0, 2)->values(), 'slots' => 2],
-        ['title' => 'ФИНАЛ',      'matches' => $regionsPlayoffSorted->slice(2, 1)->values(), 'slots' => 1],
-    ];
-@endphp
-
-<div id="regions-tab-playoff" style="display:none;">
-    <div class="rfs-header">
-        <div class="rfs__title">Путь регионов. Плей-офф</div>
-        <div class="rfs-header__buttons">
-            <button class="button" type="button" id="regions-btn-rounds2">
-                <div class="button__text">Раунды</div>
-            </button>
-            <button class="button is-active" type="button" id="regions-btn-playoff2">
-                <div class="button__text">Плей-офф</div>
-            </button>
-        </div>
-    </div>
+<div id="rfs-tab-regions" style="display:none;">
     <section class="rfs rfs-playoff">
         <div class="rfs-bracket">
             @foreach($regionsRoundsPlayoff as $round)
@@ -342,19 +261,17 @@
     </section>
 </div>
 
+</div>{{-- /rfs-section --}}
+
 {{-- ═══════════════════════════════════════════
-     Секция: БЛИЖАЙШИЕ МАТЧИ (Путь регионов)
+     Секция: БЛИЖАЙШИЕ МАТЧИ
 ════════════════════════════════════════════ --}}
-@include('components.upcoming-matches', ['sport' => 'rfs', 'matches' => \App\Models\UpcomingMatch::where('sport', 'rfs')->where('league_name', 'LIKE', 'Путь регионов%')->where('match_at', '>=', now())->orderBy('match_at')->get()])
+@include('components.upcoming-matches', ['sport' => 'rfs', 'matches' => \App\Models\UpcomingMatch::where('sport', 'rfs')->where('match_at', '>=', now())->orderBy('match_at')->get()])
 
 @include('partials.tab-switcher')
 <script>
 initTabSwitcher(
-    { table: 'rfs-tab-table', playoff: 'rfs-tab-playoff' },
-    { table: ['rfs-btn-table', 'rfs-btn-table2'], playoff: ['rfs-btn-playoff', 'rfs-btn-playoff2'] }
-);
-initTabSwitcher(
-    { rounds: 'regions-tab-rounds', playoff: 'regions-tab-playoff' },
-    { rounds: ['regions-btn-rounds', 'regions-btn-rounds2'], playoff: ['regions-btn-playoff', 'regions-btn-playoff2'] }
+    { table: 'rfs-tab-table', playoff: 'rfs-tab-playoff', regions: 'rfs-tab-regions' },
+    { table: ['rfs-btn-table'], playoff: ['rfs-btn-playoff'], regions: ['rfs-btn-regions'] }
 );
 </script>

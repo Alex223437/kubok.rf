@@ -25,7 +25,7 @@
     <div class="rfs-upcoming__scroll js-upcoming-scroll">
         @foreach($matches as $match)
         <div class="rfs-mcard">
-            <div class="rfs-mcard__header">{{ $match->league_name }}</div>
+            <div class="rfs-mcard__header">{!! str_replace('. ', '.<br class="rfs-mcard__br"> ', e($match->league_name)) !!}</div>
             <div class="rfs-mcard__body">
                 <div class="rfs-mcard__date-row">
                     <span class="rfs-mcard__date">{{ $match->match_at->format('d/m') }}</span>
