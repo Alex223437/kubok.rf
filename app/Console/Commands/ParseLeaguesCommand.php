@@ -149,7 +149,7 @@ class ParseLeaguesCommand extends Command
 
         if (!$league || $league === 'basket') {
             $this->info('Parsing Basketball standings...');
-            $tags = ['msl', 'wsl', 'mhl', 'whl', 'wpremier'];
+            $tags = ['msl', 'mhl', 'wpremier'];
 
             BasketballStanding::truncate();
             BasketballPlayoffPair::truncate();
