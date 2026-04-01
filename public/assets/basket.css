@@ -133,4 +133,43 @@
     .bsk-bracket--playin .rfs-bracket__match {
         max-width: 100%;
     }
+
+    /* table-layout auto — колонки по контенту */
+    .bsk-table-section table {
+        table-layout: auto;
+    }
+    /* Колонка № */
+    .bsk-table-section td:nth-child(1) {
+        width: 1px;
+        min-width: 20px;
+        white-space: nowrap;
+    }
+    /* Числовые колонки — минимальная ширина */
+    .bsk-table-section td.bsk-cell-num,
+    .bsk-table-section td.bsk-cell-pts {
+        width: 1px;
+        min-width: 28px;
+        white-space: nowrap;
+    }
+    /* Клуб — ellipsis */
+    .bsk-table-section td.bsk-cell-club,
+    .bsk-table-section th.bsk-cell-club {
+        max-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    /* Скрыть: % (6), Последние 5 (7), Забито (8), Пропущено (9), +/- (10) */
+    .bsk-table-section table tr td:nth-child(6),
+    .bsk-table-section table tr td:nth-child(7),
+    .bsk-table-section table tr td:nth-child(8),
+    .bsk-table-section table tr td:nth-child(9),
+    .bsk-table-section table tr td:nth-child(10) {
+        display: none;
+    }
+    /* Отступ сверху у вкладок */
+    #bsk-tab-standings,
+    #bsk-tab-playoff {
+        padding-top: 18px;
+    }
 }
