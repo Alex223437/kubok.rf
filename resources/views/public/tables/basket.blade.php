@@ -103,6 +103,78 @@
         </div>
     </section>
 
+    {{-- Карточка: Финал за 3 место --}}
+    @php
+        // Пары round=1 отсортированы по sort: первая — финал, последняя — матч за 3 место
+        $thirdPlacePair = $bracketPairs->where('round', 1)->sortBy('sort')->last();
+        $bsk3HasTeams = $thirdPlacePair
+            && !empty($thirdPlacePair->team1_name) && $thirdPlacePair->team1_name !== '?'
+            && !empty($thirdPlacePair->team2_name) && $thirdPlacePair->team2_name !== '?';
+        $bsk3NextGame = null;
+        foreach (($thirdPlacePair?->games ?? []) as $g) {
+            if (($g['status'] ?? '') === 'Scheduled' && !empty($g['date'])) {
+                $bsk3NextGame = $g; break;
+            }
+        }
+        $bsk3Date = '';
+        $bsk3Time = '';
+        if ($bsk3NextGame) {
+            try {
+                $bsk3Dt   = \Carbon\Carbon::parse($bsk3NextGame['date']);
+                $bsk3Date = $bsk3Dt->format('d/m');
+                $bsk3Time = $bsk3Dt->format('H:i') !== '00:00' ? $bsk3Dt->format('H:i') . ' мск' : '';
+            } catch (\Throwable $e) {
+                $bsk3Date = $bsk3NextGame['date'];
+            }
+        }
+    @endphp
+    <div class="bsk-pcards">
+        <div class="bsk-pcard {{ !$bsk3HasTeams ? 'bsk-pcard--empty' : '' }}">
+            <div class="bsk-pcard__title">ФИНАЛ ЗА 3 МЕСТО</div>
+            <div class="bsk-pcard__body">
+                {{-- Команда 1 --}}
+                @if(!$bsk3HasTeams)
+                    <div class="bsk-pcard__team">
+                        <div class="bsk-pcard__logo-placeholder bsk-pcard__logo-placeholder--unknown">?</div>
+                        <span class="bsk-pcard__team-name bsk-pcard__team-name--unknown">ПРОИГР. 1/2 ФИНАЛА</span>
+                    </div>
+                @else
+                    <div class="bsk-pcard__team">
+                        @if($thirdPlacePair->team1_logo)
+                            <img class="bsk-pcard__logo" src="{{ $thirdPlacePair->team1_logo }}" alt="{{ $thirdPlacePair->team1_name }}">
+                        @else
+                            <div class="bsk-pcard__logo-placeholder">{{ mb_strtoupper(mb_substr($thirdPlacePair->team1_name ?? '?', 0, 2)) }}</div>
+                        @endif
+                        <span class="bsk-pcard__team-name">{{ $thirdPlacePair->team1_name }}</span>
+                    </div>
+                @endif
+                {{-- Центр: дата или пусто --}}
+                <div class="bsk-pcard__center">
+                    @if($bsk3HasTeams && $bsk3Date)
+                        <span class="bsk-pcard__date">{{ $bsk3Date }}</span>
+                        @if($bsk3Time)<span class="bsk-pcard__time">{{ $bsk3Time }}</span>@endif
+                    @endif
+                </div>
+                {{-- Команда 2 --}}
+                @if(!$bsk3HasTeams)
+                    <div class="bsk-pcard__team">
+                        <div class="bsk-pcard__logo-placeholder bsk-pcard__logo-placeholder--unknown">?</div>
+                        <span class="bsk-pcard__team-name bsk-pcard__team-name--unknown">ПРОИГР. 1/2 ФИНАЛА</span>
+                    </div>
+                @else
+                    <div class="bsk-pcard__team">
+                        @if($thirdPlacePair->team2_logo)
+                            <img class="bsk-pcard__logo" src="{{ $thirdPlacePair->team2_logo }}" alt="{{ $thirdPlacePair->team2_name }}">
+                        @else
+                            <div class="bsk-pcard__logo-placeholder">{{ mb_strtoupper(mb_substr($thirdPlacePair->team2_name ?? '?', 0, 2)) }}</div>
+                        @endif
+                        <span class="bsk-pcard__team-name">{{ $thirdPlacePair->team2_name }}</span>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
     {{-- Игры за места --}}
     @foreach([['rows' => $extra5_8, 'title' => $extra5_8->first()?->section ?? 'Игры за 5-8 места'], ['rows' => $extra11_14, 'title' => $extra11_14->first()?->section ?? 'Игры за 11-14 места']] as $extra)
     @if($extra['rows']->isNotEmpty())

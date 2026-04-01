@@ -94,7 +94,9 @@
       "Bash(find /Users/aliaksei/Work/kubok/kubok.rf/public/assets -name \"*.css\" -exec basename {})",
       "Bash(ls -lh /Users/aliaksei/Work/kubok/kubok.rf/public/assets/*.css)",
       "mcp__claude_ai_VPS__shell",
-      "mcp__plugin_figma_figma__get_metadata"
+      "mcp__plugin_figma_figma__get_metadata",
+      "Bash(curl -o /dev/null -s -w \"%{http_code} %{url_effective}\\\\n\" \"https://img.infobasket.su/logo/13446.png\" \"https://img.infobasket.su/logo/3622.png\" \"https://img.infobasket.su/logo/2364.png\" \"https://img.infobasket.su/logo/3626.png\" \"https://img.infobasket.su/logo/13617.png\" \"https://img.infobasket.su/logo/3624.png\" \"https://img.infobasket.su/logo/17363.png\")",
+      "Bash(curl -o /dev/null -s -w \"%{http_code} %{url_effective}\\\\n\" \"https://files.infobasket.su/logos/13446.png\" \"https://files.infobasket.su/logos/3622.png\" \"https://files.infobasket.su/logos/2364.png\")"
     ]
   }
 }

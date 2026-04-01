@@ -31,6 +31,8 @@
     align-items: center;
     gap: 10px;
     background: transparent;
+    width: fit-content;
+    white-space: nowrap;
 }
 .khl-tab-buttons .button.is-active {
     color: #fff;

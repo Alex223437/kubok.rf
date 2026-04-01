@@ -24,7 +24,6 @@
 
 .bsk-cell-hdr + .bsk-cell-club {
    text-transform: none;
-    font-size: calc(16 * 100vw / 1920);
     font-weight: 400;
     font-style: normal;
     line-height: normal;
@@ -171,5 +170,161 @@
     #bsk-tab-standings,
     #bsk-tab-playoff {
         padding-top: 18px;
+    }
+}
+
+/* ─────────────────────────────────────────
+   Карточка «Финал за 3 место»
+   Структура идентична rfs-bracket__match:
+   grid 1fr auto 1fr, команда = column (лого + название)
+───────────────────────────────────────── */
+.bsk-pcards {
+    padding: calc(20 * 100vw / 1920) 0 calc(30 * 100vw / 1920);
+}
+
+.bsk-pcard {
+    display: flex;
+    flex-direction: column;
+    gap: calc(10 * 100vw / 1920);
+    width: calc(100% / 3 - 15px);
+}
+
+.bsk-pcard__title {
+    font-size: calc(24 * 100vw / 1920);
+    font-weight: 700;
+    color: #000;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* Карточка — точно как rfs-bracket__match */
+.bsk-pcard__body {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: calc(16 * 100vw / 1920);
+    border: calc(4 * 100vw / 1920) solid #000;
+    border-radius: calc(32 * 100vw / 1920);
+    padding: calc(20 * 100vw / 1920) calc(24 * 100vw / 1920);
+}
+
+/* Команда — точно как rfs-bracket__team */
+.bsk-pcard__team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(8 * 100vw / 1920);
+}
+
+/* Лого — точно как rfs-bracket__logo */
+.bsk-pcard__logo {
+    width: calc(65 * 100vw / 1920);
+    height: calc(65 * 100vw / 1920);
+    object-fit: contain;
+}
+
+.bsk-pcard__logo-placeholder {
+    width: calc(65 * 100vw / 1920);
+    height: calc(65 * 100vw / 1920);
+    border-radius: 50%;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(14 * 100vw / 1920);
+    font-weight: 700;
+    color: #666;
+}
+
+.bsk-pcard__logo-placeholder--unknown {
+    font-size: calc(32 * 100vw / 1920);
+    color: rgba(0, 0, 0, 0.2);
+    background: transparent;
+}
+
+/* Название — точно как rfs-bracket__team-name */
+.bsk-pcard__team-name {
+    font-size: calc(18 * 100vw / 1920);
+    font-weight: 500;
+    color: #000;
+    text-align: center;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: normal;
+    max-width: calc(200 * 100vw / 1920);
+}
+
+.bsk-pcard__team-name--unknown {
+    color: rgba(0, 0, 0, 0.2);
+}
+
+/* Центральная колонка: дата/время */
+.bsk-pcard__center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: calc(80 * 100vw / 1920);
+}
+
+.bsk-pcard__date {
+    font-size: calc(36 * 100vw / 1920);
+    font-weight: 700;
+    color: #000;
+    line-height: 1;
+}
+
+.bsk-pcard__time {
+    font-size: calc(16 * 100vw / 1920);
+    font-weight: 500;
+    color: #000;
+}
+
+@media (max-width: 1024px) {
+    .bsk-pcards {
+        padding: 16px 0 20px;
+    }
+
+    .bsk-pcard {
+        width: 100%;
+        gap: 8px;
+    }
+
+    .bsk-pcard__title {
+        font-size: 14px;
+    }
+
+    .bsk-pcard__body {
+        border-radius: 16px;
+        border-width: 2px;
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    .bsk-pcard__logo,
+    .bsk-pcard__logo-placeholder {
+        width: 36px;
+        height: 36px;
+    }
+
+    .bsk-pcard__logo-placeholder--unknown {
+        font-size: 20px;
+    }
+
+    .bsk-pcard__team-name {
+        font-size: 12px;
+        width: 100%;
+        max-width: none;
+    }
+
+    .bsk-pcard__date {
+        font-size: 20px;
+    }
+
+    .bsk-pcard__time {
+        font-size: 10px;
+    }
+    .bsk-pcard__title {
+        text-align: center;
     }
 }

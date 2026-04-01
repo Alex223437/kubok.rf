@@ -68,7 +68,7 @@ class BasketballParser extends BaseParser
     private function parseStandings(array $json): array
     {
         $data = [];
-        $seenTeams = [];
+        $seenIds = [];
 
         if (!isset($json['items']) || !is_array($json['items'])) {
             return $data;
@@ -86,8 +86,12 @@ class BasketballParser extends BaseParser
 
             foreach ($standings as $teamData) {
                 $teamName = $teamData['name'] ?? '';
-                if (empty($teamName) || in_array($teamName, $seenTeams)) continue;
-                $seenTeams[] = $teamName;
+                $teamId   = $teamData['teamId'] ?? null;
+                if (empty($teamName)) continue;
+                // Дедублируем по (section + teamId) — одна команда может быть в нескольких секциях
+                $dedupeKey = $compName . '|' . ($teamId ?? $teamName);
+                if (in_array($dedupeKey, $seenIds)) continue;
+                $seenIds[] = $dedupeKey;
 
                 $totalGames = (int)($teamData['totalGames'] ?? 0);
                 $totalWin   = (int)($teamData['totalWin'] ?? 0);
@@ -191,4 +195,6 @@ class BasketballParser extends BaseParser
 
         return $data;
     }
+
+
 }
