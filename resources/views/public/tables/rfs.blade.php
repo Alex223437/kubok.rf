@@ -266,7 +266,7 @@
 {{-- ═══════════════════════════════════════════
      Секция: БЛИЖАЙШИЕ МАТЧИ
 ════════════════════════════════════════════ --}}
-@include('components.upcoming-matches', ['sport' => 'rfs', 'matches' => \App\Models\UpcomingMatch::where('sport', 'rfs')->where('match_at', '>=', now())->orderBy('match_at')->get()])
+@include('components.upcoming-matches', ['sport' => 'rfs', 'matches' => \App\Models\UpcomingMatch::where('sport', 'rfs')->where('match_at', '>=', now())->orderBy('match_at')->get(), 'eventsUrl' => $page->getPayloadValue('events_url')])
 
 @include('partials.tab-switcher')
 <script>

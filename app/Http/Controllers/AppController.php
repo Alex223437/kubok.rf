@@ -12,6 +12,18 @@ class AppController extends Controller
         return 'ok';
     }
 
+    public function runParser(\Illuminate\Http\Request $request)
+    {
+        $league = $request->input('league');
+        $args = $league ? ['--league' => $league] : [];
+        try {
+            \Artisan::call('app:parse-leagues', $args);
+            return back()->with('parser_success', 'Парсер завершён успешно.');
+        } catch (\Throwable $e) {
+            return back()->with('parser_error', 'Ошибка: ' . $e->getMessage());
+        }
+    }
+
     public function deployAssets()
     {
         chdir($_SERVER['DOCUMENT_ROOT']);

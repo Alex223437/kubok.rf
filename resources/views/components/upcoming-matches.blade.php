@@ -70,6 +70,11 @@
         </div>
         @endforeach
     </div>
+    @if(!empty($eventsUrl))
+    <a class="button button--red button--centered" href="{{ $eventsUrl }}" target="_blank">
+        <span class="button__text">ПОКАЗАТЬ ЕЩЕ</span>
+    </a>
+    @endif
 </section>
 <script>
 (function () {

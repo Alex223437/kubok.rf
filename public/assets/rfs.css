@@ -107,9 +107,15 @@
    RFS — ближайшие матчи (новый дизайн)
 ───────────────────────────────────────── */
 .rfs-upcoming-section {
+    display: grid;
     background: #fff;
     padding: 0 calc(80 * 100vw / 1920) calc(60 * 100vw / 1920);
     margin: 0 calc(-40 * 100vw / 1920);
+}
+
+.button--centered {
+    justify-self: center;
+    margin-top: calc(24 * 100vw / 1920);
 }
 
 .rfs-upcoming__header {

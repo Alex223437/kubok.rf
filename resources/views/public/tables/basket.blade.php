@@ -185,7 +185,7 @@
     @endforeach
 </div>
 
-@include('components.upcoming-matches', ['sport' => 'basketball'])
+@include('components.upcoming-matches', ['sport' => 'basketball', 'eventsUrl' => $page->getPayloadValue('events_url')])
 
 @include('partials.tab-switcher')
 @if($hasRegular)

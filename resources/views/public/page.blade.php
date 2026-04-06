@@ -83,8 +83,12 @@
           </section>
         @endif
 
+        @php
+          $isParserPage = in_array($page->code, ['fonbet-kubok-rossii-po-futbolu', 'fonbet-super-liga', 'fonbet-vyssaia-liga', 'fonbet-premer-liga']);
+        @endphp
+
         @if($page->eventsActive->isNotEmpty())
-          <section class="match">
+          <section class="match" @if($isParserPage) style="display:none;" @endif>
             <div class="article__title color-red ml-title">БЛИЖАЙШИЕ МАТЧИ</div>
             <div class="match__wrapper">
               <div class="swiper-container" data-config="3">
