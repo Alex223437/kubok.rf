@@ -255,7 +255,7 @@
 
 </div>
 
-@include('components.upcoming-matches', ['sport' => 'khl'])
+@include('components.upcoming-matches', ['sport' => 'khl', 'eventsUrl' => $page->getPayloadValue('events_url')])
 
 @include('partials.tab-switcher')
 <script>

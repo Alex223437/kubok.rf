@@ -84,7 +84,7 @@
         @endif
 
         @php
-          $isParserPage = in_array($page->code, ['fonbet-kubok-rossii-po-futbolu', 'fonbet-super-liga', 'fonbet-vyssaia-liga', 'fonbet-premer-liga']);
+          $isParserPage = in_array($page->code, ['fonbet-cempionat-kxl', 'fonbet-kubok-rossii-po-futbolu', 'fonbet-super-liga', 'fonbet-vyssaia-liga', 'fonbet-premer-liga']);
         @endphp
 
         @if($page->eventsActive->isNotEmpty())
