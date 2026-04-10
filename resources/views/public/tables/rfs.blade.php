@@ -101,9 +101,9 @@
 
     // Плей-офф регионов — по group_name (парсер проставляет раунд явно)
     $regionsRoundsPlayoff = [
-        ['title' => '1/4 ФИНАЛА', 'matches' => $rfsMatches->where('group_name', 'Путь регионов. 1/4 финала')->sortBy('id')->values(), 'slots' => 4],
-        ['title' => '1/2 ФИНАЛА', 'matches' => $rfsMatches->where('group_name', 'Путь регионов. 1/2 финала')->sortBy('id')->values(), 'slots' => 2],
-        ['title' => 'ФИНАЛ',      'matches' => $rfsMatches->where('group_name', 'Путь регионов. Финал')->sortBy('id')->values(),      'slots' => 1],
+        ['title' => '1/4 ФИНАЛА', 'matches' => $allMatches->where('group_name', 'Путь регионов. 1/4 финала')->sortBy('id')->values(), 'slots' => 4],
+        ['title' => '1/2 ФИНАЛА', 'matches' => $allMatches->where('group_name', 'Путь регионов. 1/2 финала')->sortBy('id')->values(), 'slots' => 2],
+        ['title' => 'ФИНАЛ',      'matches' => $allMatches->where('group_name', 'Путь регионов. Финал')->sortBy('id')->values(),      'slots' => 1],
     ];
 
     // Плей-офф РПЛ
