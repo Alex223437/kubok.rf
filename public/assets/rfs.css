@@ -710,6 +710,11 @@
     gap: 20px;
 }
 
+.rfs-bracket__pair .rfs-bracket__match {
+    flex: 1;
+    flex-shrink: 0;
+}
+
 /* ── Команда: лого сверху, название снизу ─ */
 .rfs-bracket__team {
     display: flex;

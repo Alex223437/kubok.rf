@@ -80,6 +80,10 @@
 
     // Хелпер: подготовить строки для x-bracket-match из score_or_date
     function rfs_bracket_lines(string $scoreOrDate): array {
+        // Счёт с пенальти: "1:1 (2:4)"
+        if (preg_match('/^(\d+:\d+)\s+\((\d+:\d+)\)$/', $scoreOrDate, $pm)) {
+            return ['isScore' => true, 'lines' => [$pm[1], 'б ' . $pm[2]]];
+        }
         $parts = array_map('trim', explode(' | ', $scoreOrDate));
         $isScore = (bool) preg_match('/^\d+:\d+$/', $parts[0] ?? '');
         if ($isScore) return ['isScore' => true, 'lines' => $parts];

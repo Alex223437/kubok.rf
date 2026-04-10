@@ -140,6 +140,7 @@ class RfsCupParser extends BaseParser
                             $additional = trim($scoreLink->filter('.additional')->text());
                             if (preg_match('/\((\d+):(\d+)\)/', $additional, $pm)) {
                                 $penaltyWinner = ((int)$pm[1] > (int)$pm[2]) ? 'team1' : 'team2';
+                                $scoreOrDate .= ' (' . $pm[1] . ':' . $pm[2] . ')';
                             }
                         }
                     } elseif ($dateText) {
