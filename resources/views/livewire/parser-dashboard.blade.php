@@ -22,7 +22,7 @@
     @endif
 
     {{-- Форма запуска --}}
-    <div class="flex flex-wrap gap-x-8 gap-y-3 mb-4 text-sm">
+    <div class="flex flex-wrap mb-4 text-sm" style="gap: 12px 32px;">
         <label class="flex items-center gap-2 cursor-pointer">
             <input type="radio" wire:model="league" value="" wire:change="$set('basketGroup', '')">
             <span>Все</span>
