@@ -705,6 +705,11 @@
     border-color: #e0e0e0;
 }
 
+.rfs-bracket__pair {
+    display: flex;
+    gap: 20px;
+}
+
 /* ── Команда: лого сверху, название снизу ─ */
 .rfs-bracket__team {
     display: flex;
@@ -820,4 +825,8 @@
     .rfs-bracket__score { font-size: 26px; }
     .rfs-bracket__date { font-size: 13px; line-height: 13px; }
     .rfs-bracket__scores { min-width: 70px; }
+
+    .rfs-bracket__pair {
+        flex-direction: column;
+    }
 }

@@ -101,9 +101,9 @@
 
     // Плей-офф регионов — по group_name (парсер проставляет раунд явно)
     $regionsRoundsPlayoff = [
-        ['title' => '1/4 ФИНАЛА', 'matches' => $allMatches->where('group_name', 'Путь регионов. 1/4 финала')->sortBy('id')->values(), 'slots' => 4],
-        ['title' => '1/2 ФИНАЛА', 'matches' => $allMatches->where('group_name', 'Путь регионов. 1/2 финала')->sortBy('id')->values(), 'slots' => 2],
-        ['title' => 'ФИНАЛ',      'matches' => $allMatches->where('group_name', 'Путь регионов. Финал')->sortBy('id')->values(),      'slots' => 1],
+        ['title' => '1/4 ФИНАЛА', 'matches' => $allMatches->where('group_name', 'Путь регионов. 1/4 финала')->sortBy('id')->values(), 'slots' => 4, 'two_legged' => true],
+        ['title' => '1/2 ФИНАЛА', 'matches' => $allMatches->where('group_name', 'Путь регионов. 1/2 финала')->sortBy('id')->values(), 'slots' => 2, 'two_legged' => true],
+        ['title' => 'ФИНАЛ',      'matches' => $allMatches->where('group_name', 'Путь регионов. Финал')->sortBy('id')->values(),      'slots' => 1, 'two_legged' => false],
     ];
 
     // Плей-офф РПЛ
@@ -235,24 +235,46 @@
                 <div class="rfs-bracket__round-title">{{ $round['title'] }}</div>
                 <div class="rfs-bracket__matches">
                     @for($i = 0; $i < $round['slots']; $i++)
-                    @php $match = $round['matches']->get($i); @endphp
-                    @if($match)
-                        @php
-                            $logo1r = $match->team1_logo ?: ($teamLogos[$match->team1] ?? null);
-                            $logo2r = $match->team2_logo ?: ($teamLogos[$match->team2] ?? null);
-                            $blr = rfs_bracket_lines($match->score_or_date);
-                        @endphp
-                        <x-bracket-match
-                            :team1="$match->team1"
-                            :team2="$match->team2"
-                            :logo1="$logo1r"
-                            :logo2="$logo2r"
-                            :is-score="$blr['isScore']"
-                            :lines="$blr['lines']"
-                        />
-                    @else
-                        <x-bracket-match :empty="true" />
-                    @endif
+                    @php
+                        $match  = $round['matches']->get($i);
+                        $match2 = $round['two_legged'] ? $round['matches']->get($i + $round['slots']) : null;
+                    @endphp
+                    <div class="{{ $round['two_legged'] ? 'rfs-bracket__pair' : '' }}">
+                        @if($match)
+                            @php
+                                $logo1r = $match->team1_logo ?: ($teamLogos[$match->team1] ?? null);
+                                $logo2r = $match->team2_logo ?: ($teamLogos[$match->team2] ?? null);
+                                $blr = rfs_bracket_lines($match->score_or_date);
+                            @endphp
+                            <x-bracket-match
+                                :team1="$match->team1"
+                                :team2="$match->team2"
+                                :logo1="$logo1r"
+                                :logo2="$logo2r"
+                                :is-score="$blr['isScore']"
+                                :lines="$blr['lines']"
+                            />
+                        @else
+                            <x-bracket-match :empty="true" />
+                        @endif
+                        @if($match2)
+                            @php
+                                $logo1r2 = $match2->team1_logo ?: ($teamLogos[$match2->team1] ?? null);
+                                $logo2r2 = $match2->team2_logo ?: ($teamLogos[$match2->team2] ?? null);
+                                $blr2 = rfs_bracket_lines($match2->score_or_date);
+                            @endphp
+                            <x-bracket-match
+                                :team1="$match2->team1"
+                                :team2="$match2->team2"
+                                :logo1="$logo1r2"
+                                :logo2="$logo2r2"
+                                :is-score="$blr2['isScore']"
+                                :lines="$blr2['lines']"
+                            />
+                        @elseif($round['two_legged'])
+                            <x-bracket-match :empty="true" />
+                        @endif
+                    </div>
                     @endfor
                 </div>
             </div>
