@@ -5,6 +5,7 @@
     'logo2' => null,
     'isScore' => false,
     'lines' => [],
+    'penalty' => null,
     'empty' => false,
 ])
 
@@ -34,6 +35,9 @@
         @foreach($lines as $line)
             <span class="{{ $isScore ? 'rfs-bracket__score' : 'rfs-bracket__date' }}">{{ $line }}</span>
         @endforeach
+        @if($penalty)
+            <span class="rfs-bracket__penalty">{{ $penalty }}</span>
+        @endif
     </div>
     <div class="rfs-bracket__team">
         @if($logo2)

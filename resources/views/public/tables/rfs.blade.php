@@ -82,7 +82,7 @@
     function rfs_bracket_lines(string $scoreOrDate): array {
         // Счёт с пенальти: "1:1 (2:4)"
         if (preg_match('/^(\d+:\d+)\s+\((\d+:\d+)\)$/', $scoreOrDate, $pm)) {
-            return ['isScore' => true, 'lines' => [$pm[1], 'б ' . $pm[2]]];
+            return ['isScore' => true, 'lines' => [$pm[1]], 'penalty' => '(' . $pm[2] . ')'];
         }
         $parts = array_map('trim', explode(' | ', $scoreOrDate));
         $isScore = (bool) preg_match('/^\d+:\d+$/', $parts[0] ?? '');
@@ -257,6 +257,7 @@
                                 :logo2="$logo2r"
                                 :is-score="$blr['isScore']"
                                 :lines="$blr['lines']"
+                                :penalty="$blr['penalty'] ?? null"
                             />
                         @else
                             <x-bracket-match :empty="true" />
@@ -274,6 +275,7 @@
                                 :logo2="$logo2r2"
                                 :is-score="$blr2['isScore']"
                                 :lines="$blr2['lines']"
+                                :penalty="$blr2['penalty'] ?? null"
                             />
                         @elseif($round['two_legged'])
                             <x-bracket-match :empty="true" />

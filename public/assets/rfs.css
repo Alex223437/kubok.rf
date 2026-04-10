@@ -712,7 +712,13 @@
 
 .rfs-bracket__pair .rfs-bracket__match {
     flex: 1;
-    flex-shrink: 0;
+    min-width: 0;
+}
+
+.rfs-bracket__penalty {
+    font-size: 13px;
+    color: #888;
+    line-height: 1;
 }
 
 /* ── Команда: лого сверху, название снизу ─ */
