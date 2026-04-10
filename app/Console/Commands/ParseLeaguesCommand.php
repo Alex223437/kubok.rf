@@ -155,87 +155,99 @@ class ParseLeaguesCommand extends Command
             BasketballPlayoffPair::truncate();
 
             foreach ($tags as $tag) {
-                try {
-                    $this->info("Fetching standings for tag: {$tag}");
-                    $basketData = $basketballParser->parse($tag);
+                $attempt = 0;
+                $maxAttempts = 2;
+                $retryDelay = 60;
 
-                    if (!empty($basketData)) {
-                        foreach ($basketData as $row) {
-                            BasketballStanding::create([
-                                'tag'        => $tag,
-                                'section'    => $row['section'] ?? null,
-                                'rank'       => $row['Место'] ?? null,
-                                'team'       => $row['Команда'] ?? '',
-                                'logo'       => $row['Логотип'] ?? null,
-                                'region_name'=> $row['Регион'] ?? null,
-                                'games'      => $row['И'] ?? null,
-                                'wins'       => $row['В'] ?? null,
-                                'win_pct'    => $row['%'] ?? null,
-                                'losses'     => $row['П'] ?? null,
-                                'points'     => $row['О'] ?? null,
-                                'plus_minus' => ($row['+'] ?? '0') . '/' . ($row['-'] ?? '0'),
-                                'diff'       => $row['Разница'] ?? null,
-                                'last_5'     => $row['Последние 5'] ?? null,
-                            ]);
-                        }
-                        $this->info("Standings saved for {$tag}: " . count($basketData) . " teams");
-                    } else {
-                        $this->warn("No standings data for {$tag}");
-                    }
+                while ($attempt < $maxAttempts) {
+                    $attempt++;
+                    try {
+                        $this->info("Fetching standings for tag: {$tag}" . ($attempt > 1 ? " (attempt {$attempt})" : ''));
+                        $basketData = $basketballParser->parse($tag);
 
-                    // Плей-офф пары + ближайшие матчи
-                    $this->info("Fetching playoff pairs for tag: {$tag}");
-                    $json = $basketballParser->fetchJsonPublic($tag);
-                    $playoffData = $basketballParser->parsePlayoffPairs($json);
-
-                    if (!empty($playoffData)) {
-                        foreach ($playoffData as $row) {
-                            BasketballPlayoffPair::create(array_merge($row, ['tag' => $tag]));
-                        }
-                        $this->info("Playoff pairs saved for {$tag}: " . count($playoffData) . " pairs");
-                    } else {
-                        $this->warn("No playoff data for {$tag}");
-                    }
-
-                    // Синхронизируем ближайшие матчи баскетбола
-                    UpcomingMatch::where('sport', 'basketball')->where('league_name', 'LIKE', '%' . $tag . '%')->delete();
-                    $upcomingCount = 0;
-                    foreach ($playoffData as $row) {
-                        foreach ($row['games'] ?? [] as $game) {
-                            if (($game['status'] ?? '') !== 'Scheduled' || empty($game['date'])) continue;
-                            // date = "01.04" → добавляем год
-                            if (preg_match('/^(\d{2})\.(\d{2})$/', $game['date'], $dm)) {
-                                $matchAt = '2026-' . $dm[2] . '-' . $dm[1] . ' 00:00:00';
-                            } else {
-                                continue;
+                        if (!empty($basketData)) {
+                            foreach ($basketData as $row) {
+                                BasketballStanding::create([
+                                    'tag'        => $tag,
+                                    'section'    => $row['section'] ?? null,
+                                    'rank'       => $row['Место'] ?? null,
+                                    'team'       => $row['Команда'] ?? '',
+                                    'logo'       => $row['Логотип'] ?? null,
+                                    'region_name'=> $row['Регион'] ?? null,
+                                    'games'      => $row['И'] ?? null,
+                                    'wins'       => $row['В'] ?? null,
+                                    'win_pct'    => $row['%'] ?? null,
+                                    'losses'     => $row['П'] ?? null,
+                                    'points'     => $row['О'] ?? null,
+                                    'plus_minus' => ($row['+'] ?? '0') . '/' . ($row['-'] ?? '0'),
+                                    'diff'       => $row['Разница'] ?? null,
+                                    'last_5'     => $row['Последние 5'] ?? null,
+                                ]);
                             }
-                            if (empty($row['team1_name']) || empty($row['team2_name'])) continue;
-                            // Пропускаем технические TBD-записи
-                            if (str_contains($row['team1_name'] ?? '', 'Победитель') ||
-                                str_contains($row['team1_name'] ?? '', 'Проигравший')) continue;
+                            $this->info("Standings saved for {$tag}: " . count($basketData) . " teams");
+                        } else {
+                            $this->warn("No standings data for {$tag}");
+                        }
 
-                            UpcomingMatch::create([
-                                'sport'       => 'basketball',
-                                'league_name' => $row['section_name'] . ' (' . strtoupper($tag) . ')',
-                                'team1'       => $row['team1_name'],
-                                'team1_logo'  => $row['team1_logo'],
-                                'team1_city'  => $row['team1_region'],
-                                'team2'       => $row['team2_name'],
-                                'team2_logo'  => $row['team2_logo'],
-                                'team2_city'  => $row['team2_region'],
-                                'match_at'    => $matchAt,
-                            ]);
-                            $upcomingCount++;
+                        // Плей-офф пары + ближайшие матчи
+                        $this->info("Fetching playoff pairs for tag: {$tag}");
+                        $json = $basketballParser->fetchJsonPublic($tag);
+                        $playoffData = $basketballParser->parsePlayoffPairs($json);
+
+                        if (!empty($playoffData)) {
+                            foreach ($playoffData as $row) {
+                                BasketballPlayoffPair::create(array_merge($row, ['tag' => $tag]));
+                            }
+                            $this->info("Playoff pairs saved for {$tag}: " . count($playoffData) . " pairs");
+                        } else {
+                            $this->warn("No playoff data for {$tag}");
+                        }
+
+                        // Синхронизируем ближайшие матчи баскетбола
+                        UpcomingMatch::where('sport', 'basketball')->where('league_name', 'LIKE', '%' . $tag . '%')->delete();
+                        $upcomingCount = 0;
+                        foreach ($playoffData as $row) {
+                            foreach ($row['games'] ?? [] as $game) {
+                                if (($game['status'] ?? '') !== 'Scheduled' || empty($game['date'])) continue;
+                                if (preg_match('/^(\d{2})\.(\d{2})$/', $game['date'], $dm)) {
+                                    $matchAt = '2026-' . $dm[2] . '-' . $dm[1] . ' 00:00:00';
+                                } else {
+                                    continue;
+                                }
+                                if (empty($row['team1_name']) || empty($row['team2_name'])) continue;
+                                if (str_contains($row['team1_name'] ?? '', 'Победитель') ||
+                                    str_contains($row['team1_name'] ?? '', 'Проигравший')) continue;
+
+                                UpcomingMatch::create([
+                                    'sport'       => 'basketball',
+                                    'league_name' => $row['section_name'] . ' (' . strtoupper($tag) . ')',
+                                    'team1'       => $row['team1_name'],
+                                    'team1_logo'  => $row['team1_logo'],
+                                    'team1_city'  => $row['team1_region'],
+                                    'team2'       => $row['team2_name'],
+                                    'team2_logo'  => $row['team2_logo'],
+                                    'team2_city'  => $row['team2_region'],
+                                    'match_at'    => $matchAt,
+                                ]);
+                                $upcomingCount++;
+                            }
+                        }
+                        if ($upcomingCount > 0) {
+                            $this->info("Upcoming basketball matches synced for {$tag}: {$upcomingCount}");
+                        }
+
+                        break; // успех — выходим из retry-цикла
+
+                    } catch (\Exception $e) {
+                        $this->error("Basketball parsing error for {$tag} (attempt {$attempt}): " . $e->getMessage());
+                        if ($attempt < $maxAttempts) {
+                            $this->warn("Retrying {$tag} in {$retryDelay}s...");
+                            sleep($retryDelay);
                         }
                     }
-                    if ($upcomingCount > 0) {
-                        $this->info("Upcoming basketball matches synced for {$tag}: {$upcomingCount}");
-                    }
-                } catch (\Exception $e) {
-                    $this->error("Basketball parsing error for {$tag}: " . $e->getMessage() . " on line " . $e->getLine());
                 }
 
-                sleep(2);
+                sleep(10);
             }
         }
 
