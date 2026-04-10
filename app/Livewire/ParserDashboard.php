@@ -7,18 +7,15 @@ use Livewire\Component;
 
 class ParserDashboard extends Component
 {
-    public string $league = '';
-    public string $basketGroup = '';
+    // Единое значение: '', 'khl', 'rfs', 'basket-super', 'basket-vysshaya', 'basket-premier'
+    public string $selection = '';
 
     public function runParser(): void
     {
-        $logLeague = $this->league ?: null;
-        if ($this->league === 'basket' && $this->basketGroup) {
-            $logLeague = 'basket-' . $this->basketGroup;
-        }
+        [$league, $basketGroup] = $this->parseSelection();
 
         $log = ParseLog::create([
-            'league'     => $logLeague,
+            'league'     => $this->selection ?: null,
             'status'     => 'running',
             'started_at' => now(),
         ]);
@@ -26,11 +23,11 @@ class ParserDashboard extends Component
         $php     = PHP_BINARY;
         $artisan = base_path('artisan');
         $args    = "--log-id={$log->id}";
-        if ($this->league) {
-            $args .= ' --league=' . escapeshellarg($this->league);
+        if ($league) {
+            $args .= ' --league=' . escapeshellarg($league);
         }
-        if ($this->league === 'basket' && $this->basketGroup) {
-            $args .= ' --basket-group=' . escapeshellarg($this->basketGroup);
+        if ($basketGroup) {
+            $args .= ' --basket-group=' . escapeshellarg($basketGroup);
         }
 
         $pid = (int) shell_exec("nohup {$php} {$artisan} app:parse-leagues {$args} > /dev/null 2>&1 & echo \$!");
@@ -57,5 +54,13 @@ class ParserDashboard extends Component
         return view('livewire.parser-dashboard', [
             'latestLog' => ParseLog::latest('started_at')->first(),
         ]);
+    }
+
+    private function parseSelection(): array
+    {
+        if (str_starts_with($this->selection, 'basket-')) {
+            return ['basket', substr($this->selection, 7)];
+        }
+        return [$this->selection, ''];
     }
 }

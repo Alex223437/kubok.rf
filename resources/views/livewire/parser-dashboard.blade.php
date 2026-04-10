@@ -23,26 +23,16 @@
 
     {{-- Форма запуска --}}
     <div class="flex flex-wrap mb-4 text-sm" style="gap: 12px 32px;">
+        @foreach([
+            ''                 => 'Все',
+            'khl'              => 'КХЛ',
+            'rfs'              => 'Кубок России',
+            'basket-super'     => 'Баскет: Супер Лига',
+            'basket-vysshaya'  => 'Баскет: Высшая Лига',
+            'basket-premier'   => 'Баскет: Премьер Лига',
+        ] as $value => $label)
         <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" wire:model="league" value="" wire:change="$set('basketGroup', '')">
-            <span>Все</span>
-        </label>
-        <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" wire:model="league" value="khl" wire:change="$set('basketGroup', '')">
-            <span>КХЛ</span>
-        </label>
-        <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" wire:model="league" value="rfs" wire:change="$set('basketGroup', '')">
-            <span>Кубок России</span>
-        </label>
-
-        <span class="text-gray-300 self-center hidden sm:inline">|</span>
-
-        @foreach(['super' => 'Баскет: Супер Лига', 'vysshaya' => 'Баскет: Высшая Лига', 'premier' => 'Баскет: Премьер Лига'] as $group => $label)
-        <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" wire:model="league" value="basket"
-                   wire:change="$set('basketGroup', '{{ $group }}')"
-                   @if($league === 'basket' && $basketGroup === $group) checked @endif>
+            <input type="radio" wire:model="selection" value="{{ $value }}">
             <span>{{ $label }}</span>
         </label>
         @endforeach
