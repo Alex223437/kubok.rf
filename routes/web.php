@@ -22,7 +22,6 @@ Route::middleware('auth')->group(function () {
 
 
         Route::get('/deploy-assets', [Controllers\AppController::class, 'deployAssets'])->name('deploy-assets');
-        Route::post('/run-parser', [Controllers\AppController::class, 'runParser'])->name('run-parser');
     });
 });
 

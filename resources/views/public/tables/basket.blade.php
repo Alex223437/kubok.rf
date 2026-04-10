@@ -4,7 +4,14 @@
 
 @php
     $leagueTag    = $tag ?? 'msl';
-    $allStandings = \App\Models\BasketballStanding::where('tag', $leagueTag)->orderBy('rank')->get();
+    $womenTag     = $womenTag ?? null;
+    $allowedTags  = array_filter([$leagueTag, $womenTag]);
+
+    // Мужская лига
+    $allStandings = \App\Models\BasketballStanding::where('tag', $leagueTag)
+        ->orderByRaw('CASE WHEN games = 0 OR games IS NULL THEN 1 ELSE 0 END')
+        ->orderBy('rank')
+        ->get();
 
     $regularRows  = $allStandings->where('section', 'Регулярный чемпионат')->values();
     $hasRegular   = $regularRows->isNotEmpty() && !($defaultPlayoff ?? false);
@@ -20,23 +27,95 @@
         ['title' => '1/2 ФИНАЛА', 'pairs' => $bracketPairs->where('round', 2)->values(), 'slots' => 2],
         ['title' => 'ФИНАЛ',      'pairs' => $bracketPairs->where('round', 1)->values(), 'slots' => 2],
     ];
+
+    // Женская лига (только если передан $womenTag)
+    if ($womenTag) {
+        $wAllStandings = \App\Models\BasketballStanding::where('tag', $womenTag)
+            ->orderByRaw('CASE WHEN games = 0 OR games IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('rank')
+            ->get();
+
+        $wRegularRows  = $wAllStandings->where('section', 'Регулярный чемпионат')->values();
+        $wHasRegular   = $wRegularRows->isNotEmpty();
+        $wExtra5_8     = $wAllStandings->whereIn('section', ['Игры за 5-8 места', 'Игры за 5-6 места'])->values();
+        $wExtra11_14   = $wAllStandings->whereIn('section', ['Игры за 11-14 места', 'Игры за 9-12 места', 'Игры за 9-10 места'])->values();
+
+        $wPlayoffPairs = \App\Models\BasketballPlayoffPair::where('tag', $womenTag)->get();
+        $wBracketPairs = $wPlayoffPairs->where('section', 'playoff')->sortBy('sort')->values();
+
+        $wRounds = [
+            ['title' => '1/4 ФИНАЛА', 'pairs' => $wBracketPairs->where('round', 4)->values(), 'slots' => 4],
+            ['title' => '1/2 ФИНАЛА', 'pairs' => $wBracketPairs->where('round', 2)->values(), 'slots' => 2],
+            ['title' => 'ФИНАЛ',      'pairs' => $wBracketPairs->where('round', 1)->values(), 'slots' => 2],
+        ];
+
+        $wThirdPlacePair = $wBracketPairs->where('round', 1)->sortBy('sort')->last();
+        $wBsk3HasTeams = $wThirdPlacePair
+            && !empty($wThirdPlacePair->team1_name) && $wThirdPlacePair->team1_name !== '?'
+            && !empty($wThirdPlacePair->team2_name) && $wThirdPlacePair->team2_name !== '?';
+    }
 @endphp
 
-{{-- ═══ Вкладка: ЧЕМПИОНАТ ══════════════════ --}}
-@if($hasRegular)
-<div id="bsk-tab-standings">
-    <div class="rfs-header">
-        <div class="rfs__title">Турнирная таблица</div>
+{{-- ════════════════════════════════════════════
+     ШАПКА с переключателями
+════════════════════════════════════════════ --}}
+@if($hasRegular || $womenTag)
+<div class="rfs-header {{ $womenTag ? 'bsk-dual-header' : '' }}">
+
+    @if($womenTag)
+    <div class="rfs__title">Турнирная таблица</div>
+    {{-- МУЖСКАЯ ЛИГА --}}
+    <div class="bsk-league-group">
+        <span class="bsk-league-title">Мужская лига</span>
         <div class="rfs-header__buttons">
-            <button class="button is-active" type="button" id="bsk-btn-standings">
+            <button class="button {{ $hasRegular ? 'is-active' : '' }}" type="button" id="bsk-btn-standings">
                 <div class="button__text">Чемпионат</div>
             </button>
-            <button class="button" type="button" id="bsk-btn-playoff">
+            <button class="button {{ !$hasRegular ? 'is-active' : '' }}" type="button" id="bsk-btn-playoff">
                 <div class="button__text">Плей-офф</div>
             </button>
         </div>
     </div>
 
+    {{-- Разделитель --}}
+    <div class="bsk-league-divider">
+        <svg xmlns="http://www.w3.org/2000/svg" width="1" height="45" viewBox="0 0 1 45" fill="none">
+            <path d="M0.5 0.5L0.499998 44.5" stroke="black" stroke-opacity="0.18" stroke-linecap="round"/>
+        </svg>
+    </div>
+
+    {{-- ЖЕНСКАЯ ЛИГА --}}
+    <div class="bsk-league-group">
+        <span class="bsk-league-title">Женская лига</span>
+        <div class="rfs-header__buttons">
+            <button class="button" type="button" id="bsk-btn-w-standings">
+                <div class="button__text">Чемпионат</div>
+            </button>
+            <button class="button" type="button" id="bsk-btn-w-playoff">
+                <div class="button__text">Плей-офф</div>
+            </button>
+        </div>
+    </div>
+
+    @else
+    {{-- Стандартная шапка (без женской лиги) --}}
+    <div class="rfs__title">Турнирная таблица</div>
+    <div class="rfs-header__buttons">
+        <button class="button is-active" type="button" id="bsk-btn-standings">
+            <div class="button__text">Чемпионат</div>
+        </button>
+        <button class="button" type="button" id="bsk-btn-playoff">
+            <div class="button__text">Плей-офф</div>
+        </button>
+    </div>
+    @endif
+
+</div>
+@endif
+
+{{-- ═══ Вкладка: МУЖСКАЯ ЧЕМПИОНАТ ══════════ --}}
+@if($hasRegular)
+<div id="bsk-tab-standings">
     @if($regularRows->isNotEmpty())
     <section class="table khl-table bsk-table-section">
         @include('partials.bsk-standings-table', ['rows' => $regularRows, 'title' => 'Регулярный чемпионат'])
@@ -45,21 +124,8 @@
 </div>
 @endif
 
-{{-- ═══ Вкладка: ПЛЕЙ-ОФФ ══════════════════ --}}
+{{-- ═══ Вкладка: МУЖСКОЙ ПЛЕЙ-ОФФ ═══════════ --}}
 <div id="bsk-tab-playoff" @if($hasRegular) style="display:none;" @endif>
-    <div class="rfs-header">
-        <div class="rfs__title">Плей-офф</div>
-        <div class="rfs-header__buttons">
-            @if($hasRegular)
-            <button class="button" type="button" id="bsk-btn-standings2">
-                <div class="button__text">Чемпионат</div>
-            </button>
-            @endif
-            <button class="button is-active" type="button" id="bsk-btn-playoff2">
-                <div class="button__text">Плей-офф</div>
-            </button>
-        </div>
-    </div>
 
     {{-- Основная сетка плей-офф --}}
     <section class="rfs rfs-playoff bsk-playoff">
@@ -105,7 +171,6 @@
 
     {{-- Карточка: Финал за 3 место --}}
     @php
-        // Пары round=1 отсортированы по sort: первая — финал, последняя — матч за 3 место
         $thirdPlacePair = $bracketPairs->where('round', 1)->sortBy('sort')->last();
         $bsk3HasTeams = $thirdPlacePair
             && !empty($thirdPlacePair->team1_name) && $thirdPlacePair->team1_name !== '?'
@@ -132,7 +197,6 @@
         <div class="bsk-pcard {{ !$bsk3HasTeams ? 'bsk-pcard--empty' : '' }}">
             <div class="bsk-pcard__title">ФИНАЛ ЗА 3 МЕСТО</div>
             <div class="bsk-pcard__body">
-                {{-- Команда 1 --}}
                 @if(!$bsk3HasTeams)
                     <div class="bsk-pcard__team">
                         <div class="bsk-pcard__logo-placeholder bsk-pcard__logo-placeholder--unknown">?</div>
@@ -148,14 +212,12 @@
                         <span class="bsk-pcard__team-name">{{ $thirdPlacePair->team1_name }}</span>
                     </div>
                 @endif
-                {{-- Центр: дата или пусто --}}
                 <div class="bsk-pcard__center">
                     @if($bsk3HasTeams && $bsk3Date)
                         <span class="bsk-pcard__date">{{ $bsk3Date }}</span>
                         @if($bsk3Time)<span class="bsk-pcard__time">{{ $bsk3Time }}</span>@endif
                     @endif
                 </div>
-                {{-- Команда 2 --}}
                 @if(!$bsk3HasTeams)
                     <div class="bsk-pcard__team">
                         <div class="bsk-pcard__logo-placeholder bsk-pcard__logo-placeholder--unknown">?</div>
@@ -185,14 +247,152 @@
     @endforeach
 </div>
 
-@include('components.upcoming-matches', ['sport' => 'basketball', 'eventsUrl' => $page->getPayloadValue('events_url')])
+{{-- ═══ ЖЕНСКАЯ ЛИГА (только для Суперлиги) ══ --}}
+@if($womenTag)
+
+{{-- Вкладка: ЖЕНСКИЙ ЧЕМПИОНАТ --}}
+<div id="bsk-tab-w-standings" style="display:none;">
+    @if($wHasRegular && $wRegularRows->isNotEmpty())
+    <section class="table khl-table bsk-table-section">
+        @include('partials.bsk-standings-table', ['rows' => $wRegularRows, 'title' => 'Регулярный чемпионат'])
+    </section>
+    @else
+    <div style="padding: 20px;">Нет данных. Запустите парсер.</div>
+    @endif
+</div>
+
+{{-- Вкладка: ЖЕНСКИЙ ПЛЕЙ-ОФФ --}}
+<div id="bsk-tab-w-playoff" style="display:none;">
+    <section class="rfs rfs-playoff bsk-playoff">
+        <div class="rfs-bracket bsk-bracket--playoff">
+            @foreach($wRounds as $round)
+            <div class="rfs-bracket__round">
+                <div class="rfs-bracket__round-title">{{ $round['title'] }}</div>
+                <div class="rfs-bracket__matches">
+                    @for($i = 0; $i < $round['slots']; $i++)
+                    @php $pair = $round['pairs']->get($i); @endphp
+                    @if($pair)
+                        @php
+                            $wScores = [];
+                            $wDates  = [];
+                            if ($pair->score1 !== null && $pair->score2 !== null && ($pair->score1 > 0 || $pair->score2 > 0)) {
+                                $wScores[] = $pair->score1 . ':' . $pair->score2;
+                            }
+                            foreach ($pair->games ?? [] as $game) {
+                                if (($game['status'] ?? '') === 'Scheduled' && !empty($game['date'])) {
+                                    $wDates[] = $game['date'];
+                                }
+                            }
+                            $wHasScore = !empty($wScores);
+                            $wLines = $wHasScore ? $wScores : $wDates;
+                        @endphp
+                        <x-bracket-match
+                            :team1="$pair->team1_name ?? '?'"
+                            :team2="$pair->team2_name ?? '?'"
+                            :logo1="$pair->team1_logo"
+                            :logo2="$pair->team2_logo"
+                            :is-score="$wHasScore"
+                            :lines="$wLines"
+                        />
+                    @else
+                        <x-bracket-match :empty="true" />
+                    @endif
+                    @endfor
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </section>
+
+    @if($wBsk3HasTeams)
+    <div class="bsk-pcards">
+        <div class="bsk-pcard">
+            <div class="bsk-pcard__title">ФИНАЛ ЗА 3 МЕСТО</div>
+            <div class="bsk-pcard__body">
+                <div class="bsk-pcard__team">
+                    @if($wThirdPlacePair->team1_logo)
+                        <img class="bsk-pcard__logo" src="{{ $wThirdPlacePair->team1_logo }}" alt="{{ $wThirdPlacePair->team1_name }}">
+                    @else
+                        <div class="bsk-pcard__logo-placeholder">{{ mb_strtoupper(mb_substr($wThirdPlacePair->team1_name ?? '?', 0, 2)) }}</div>
+                    @endif
+                    <span class="bsk-pcard__team-name">{{ $wThirdPlacePair->team1_name }}</span>
+                </div>
+                <div class="bsk-pcard__center"></div>
+                <div class="bsk-pcard__team">
+                    @if($wThirdPlacePair->team2_logo)
+                        <img class="bsk-pcard__logo" src="{{ $wThirdPlacePair->team2_logo }}" alt="{{ $wThirdPlacePair->team2_name }}">
+                    @else
+                        <div class="bsk-pcard__logo-placeholder">{{ mb_strtoupper(mb_substr($wThirdPlacePair->team2_name ?? '?', 0, 2)) }}</div>
+                    @endif
+                    <span class="bsk-pcard__team-name">{{ $wThirdPlacePair->team2_name }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @foreach([['rows' => $wExtra5_8, 'title' => $wExtra5_8->first()?->section ?? 'Игры за 5-8 места'], ['rows' => $wExtra11_14, 'title' => $wExtra11_14->first()?->section ?? 'Игры за 11-14 места']] as $extra)
+    @if($extra['rows']->isNotEmpty())
+    <section class="table khl-table bsk-table-section">
+        @include('partials.bsk-standings-table', ['rows' => $extra['rows'], 'title' => $extra['title']])
+    </section>
+    @endif
+    @endforeach
+</div>
+
+@endif {{-- /womenTag --}}
+
+@php
+    $basketUpcoming = \App\Models\UpcomingMatch::where('sport', 'basketball')
+        ->where(function ($q) use ($allowedTags) {
+            foreach ($allowedTags as $t) {
+                $q->orWhere('league_name', 'LIKE', '%(' . strtoupper($t) . ')%');
+            }
+        })
+        ->where('match_at', '>=', now())
+        ->orderBy('match_at')
+        ->get();
+@endphp
+@include('components.upcoming-matches', ['sport' => 'basketball', 'matches' => $basketUpcoming, 'eventsUrl' => $page->getPayloadValue('events_url')])
 
 @include('partials.tab-switcher')
-@if($hasRegular)
 <script>
+@if($womenTag)
+// Dual-header switcher: единая группа из 4 вкладок
+(function () {
+    var all = [
+        { key: 'standings',  tab: document.getElementById('bsk-tab-standings'),   btn: document.getElementById('bsk-btn-standings') },
+        { key: 'playoff',    tab: document.getElementById('bsk-tab-playoff'),      btn: document.getElementById('bsk-btn-playoff') },
+        { key: 'wStandings', tab: document.getElementById('bsk-tab-w-standings'), btn: document.getElementById('bsk-btn-w-standings') },
+        { key: 'wPlayoff',   tab: document.getElementById('bsk-tab-w-playoff'),   btn: document.getElementById('bsk-btn-w-playoff') },
+    ];
+
+    function showTab(activeKey) {
+        all.forEach(function (item) {
+            if (!item.tab) return;
+            var isActive = item.key === activeKey;
+            item.tab.style.display = isActive ? '' : 'none';
+            if (item.btn) item.btn.classList.toggle('is-active', isActive);
+        });
+    }
+
+    @if($hasRegular)
+    showTab('standings');
+    @else
+    showTab('playoff');
+    @endif
+
+    all.forEach(function (item) {
+        if (item.btn) item.btn.addEventListener('click', function () { showTab(item.key); });
+    });
+})();
+@else
+{{-- Стандартный switcher --}}
+@if($hasRegular)
 initTabSwitcher(
     { standings: 'bsk-tab-standings', playoff: 'bsk-tab-playoff' },
-    { standings: ['bsk-btn-standings', 'bsk-btn-standings2'], playoff: ['bsk-btn-playoff', 'bsk-btn-playoff2'] }
+    { standings: ['bsk-btn-standings'], playoff: ['bsk-btn-playoff'] }
 );
-</script>
 @endif
+@endif
+</script>

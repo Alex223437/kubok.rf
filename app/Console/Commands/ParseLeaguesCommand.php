@@ -123,7 +123,7 @@ class ParseLeaguesCommand extends Command
                     if ($_m->team1_logo && !isset($teamLogos[$_m->team1])) $teamLogos[$_m->team1] = $_m->team1_logo;
                     if ($_m->team2_logo && !isset($teamLogos[$_m->team2])) $teamLogos[$_m->team2] = $_m->team2_logo;
                 }
-                foreach (RfsMatch::all() as $rm) {
+                foreach (RfsMatch::where('is_played', false)->get() as $rm) {
                     if (!preg_match('/^(\d{2})\.(\d{2})\.(\d{4})(?:\s+(\d{2}:\d{2}))?$/', $rm->score_or_date, $m)) continue;
                     if (empty($rm->team1) || empty($rm->team2)) continue;
                     $time = isset($m[4]) ? $m[4] : '00:00';
@@ -149,7 +149,7 @@ class ParseLeaguesCommand extends Command
 
         if (!$league || $league === 'basket') {
             $this->info('Parsing Basketball standings...');
-            $tags = ['msl', 'mhl', 'wpremier'];
+            $tags = ['msl', 'mhl', 'wpremier', 'wsl', 'whl'];
 
             BasketballStanding::truncate();
             BasketballPlayoffPair::truncate();
@@ -234,6 +234,8 @@ class ParseLeaguesCommand extends Command
                 } catch (\Exception $e) {
                     $this->error("Basketball parsing error for {$tag}: " . $e->getMessage() . " on line " . $e->getLine());
                 }
+
+                sleep(2);
             }
         }
 

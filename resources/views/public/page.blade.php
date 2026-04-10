@@ -130,11 +130,9 @@
         @elseif($page->code == 'fonbet-kubok-rossii-po-futbolu')
           @include('public.tables.rfs')
         @elseif($page->code == 'fonbet-super-liga')
-          <!-- Currently we only have one super-liga code but two DB tags (msl, wsl).
-                 Assuming the page is men's by default: -->
-          @include('public.tables.basket', ['tag' => 'msl'])
+          @include('public.tables.basket', ['tag' => 'msl', 'womenTag' => 'wsl'])
         @elseif($page->code == 'fonbet-vyssaia-liga')
-          @include('public.tables.basket', ['tag' => 'mhl'])
+          @include('public.tables.basket', ['tag' => 'mhl', 'womenTag' => 'whl'])
         @elseif($page->code == 'fonbet-premer-liga')
           @include('public.tables.basket', ['tag' => 'wpremier', 'defaultPlayoff' => true])
         @endif

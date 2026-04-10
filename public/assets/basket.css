@@ -59,7 +59,54 @@
 
 /* Секция таблицы */
 .bsk-table-section {
+    padding-top: 0;
     padding-bottom: calc(20 * 100vw / 1920);
+}
+
+.bsk-table-section .table__wrapper {
+    margin-top: 0;
+}
+
+/* Двойной заголовок МУЖСКАЯ / ЖЕНСКАЯ ЛИГА */
+.bsk-dual-header {
+    display: flex;
+    align-items: center;
+    gap: calc(24 * 100vw / 1920);
+    flex-wrap: wrap;
+    margin: 0 calc(-40 * 100vw / 1920);
+    padding-left: calc(80 * 100vw / 1920);
+    padding-right: calc(80 * 100vw / 1920);
+    padding-bottom: calc(40 * 100vw / 1920);
+}
+
+.bsk-league-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.bsk-league-title {
+    color: #000;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: normal;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.bsk-league-divider {
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .bsk-dual-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    .bsk-league-divider { display: none; }
+    .bsk-league-title { font-size: 18px; }
 }
 
 .bsk-table-section + .bsk-table-section {
@@ -81,14 +128,18 @@
 
 /* Таб-контейнеры — белый фон как в rfs */
 #bsk-tab-standings,
-#bsk-tab-playoff {
+#bsk-tab-playoff,
+#bsk-tab-w-standings,
+#bsk-tab-w-playoff {
     background: #fff;
     margin: 0 calc(-40 * 100vw / 1920);
     padding: 0 calc(40 * 100vw / 1920) calc(40 * 100vw / 1920);
 }
 
 #bsk-tab-standings .rfs-header,
-#bsk-tab-playoff .rfs-header {
+#bsk-tab-playoff .rfs-header,
+#bsk-tab-w-standings .rfs-header,
+#bsk-tab-w-playoff .rfs-header {
     margin: 0 calc(-40 * 100vw / 1920);
     padding-left: calc(80 * 100vw / 1920);
     padding-right: calc(80 * 100vw / 1920);
@@ -113,13 +164,17 @@
     }
 
     #bsk-tab-standings,
-    #bsk-tab-playoff {
+    #bsk-tab-playoff,
+    #bsk-tab-w-standings,
+    #bsk-tab-w-playoff {
         margin: 0 calc(-10 * 100vw / 1920);
         padding: 0 calc(10 * 100vw / 1920) 24px;
     }
 
     #bsk-tab-standings .rfs-header,
-    #bsk-tab-playoff .rfs-header {
+    #bsk-tab-playoff .rfs-header,
+    #bsk-tab-w-standings .rfs-header,
+    #bsk-tab-w-playoff .rfs-header {
         margin: 0 calc(-10 * 100vw / 1920);
         padding-left: calc(10 * 100vw / 1920);
         padding-right: calc(10 * 100vw / 1920);
@@ -168,7 +223,9 @@
     }
     /* Отступ сверху у вкладок */
     #bsk-tab-standings,
-    #bsk-tab-playoff {
+    #bsk-tab-playoff,
+    #bsk-tab-w-standings,
+    #bsk-tab-w-playoff {
         padding-top: 18px;
     }
 }
