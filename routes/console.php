@@ -34,16 +34,22 @@ foreach ($scheduledLeagues as $item) {
                 'status'     => 'running',
                 'started_at' => now(),
             ]);
-            $args = ['--league' => $item['league'], '--log-id' => $log->id];
+            // Для планировщика не передаём --log-id: сами захватываем вывод через Artisan::output()
+            $args = ['--league' => $item['league']];
             if ($item['group']) {
                 $args['--basket-group'] = $item['group'];
             }
             try {
                 Artisan::call('app:parse-leagues', $args);
+                $log->update([
+                    'status'      => 'success',
+                    'output'      => Artisan::output(),
+                    'finished_at' => now(),
+                ]);
             } catch (\Throwable $e) {
                 $log->update([
                     'status'      => 'error',
-                    'output'      => $e->getMessage(),
+                    'output'      => Artisan::output() . "\nОшибка: " . $e->getMessage(),
                     'finished_at' => now(),
                 ]);
             }

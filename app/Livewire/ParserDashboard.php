@@ -30,7 +30,8 @@ class ParserDashboard extends Component
             $args .= ' --basket-group=' . escapeshellarg($basketGroup);
         }
 
-        $pid = (int) shell_exec("nohup {$php} {$artisan} app:parse-leagues {$args} > /dev/null 2>&1 & echo \$!");
+        $tmpFile = sys_get_temp_dir() . "/parse_{$log->id}.log";
+        $pid = (int) shell_exec("nohup {$php} {$artisan} app:parse-leagues {$args} > " . escapeshellarg($tmpFile) . " 2>&1 & echo \$!");
         if ($pid) {
             $log->update(['pid' => $pid]);
         }

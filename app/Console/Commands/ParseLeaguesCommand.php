@@ -284,10 +284,18 @@ class ParseLeaguesCommand extends Command
         $this->info('Parsing complete.');
 
         if ($logId = $this->option('log-id')) {
+            // Читаем temp-файл с выводом (туда stdout перенаправлен при фоновом запуске)
+            $tmpFile = sys_get_temp_dir() . "/parse_{$logId}.log";
+            fflush(STDOUT);
+            $output = file_exists($tmpFile) ? file_get_contents($tmpFile) : '';
+
             ParseLog::where('id', $logId)->update([
                 'status'      => 'success',
+                'output'      => $output ?: null,
                 'finished_at' => now(),
             ]);
+
+            @unlink($tmpFile);
         }
     }
 }
