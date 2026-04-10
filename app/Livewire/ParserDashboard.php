@@ -21,7 +21,24 @@ class ParserDashboard extends Component
         $artisan = base_path('artisan');
         $league  = $this->league ? '--league=' . escapeshellarg($this->league) : '';
 
-        exec("nohup {$php} {$artisan} app:parse-leagues {$league} --log-id={$log->id} > /dev/null 2>&1 &");
+        // Запускаем в фоне и захватываем PID через $!
+        $pid = (int) shell_exec("nohup {$php} {$artisan} app:parse-leagues {$league} --log-id={$log->id} > /dev/null 2>&1 & echo \$!");
+        if ($pid) {
+            $log->update(['pid' => $pid]);
+        }
+    }
+
+    public function killParser(): void
+    {
+        $log = ParseLog::where('status', 'running')->latest('started_at')->first();
+        if (!$log || !$log->pid) return;
+
+        exec("kill {$log->pid} 2>/dev/null");
+        $log->update([
+            'status'      => 'error',
+            'output'      => 'Остановлен вручную.',
+            'finished_at' => now(),
+        ]);
     }
 
     public function render()

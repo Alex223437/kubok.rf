@@ -10,12 +10,37 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 use App\Models\ParseLog;
 
-Schedule::call(function () {
-    $log = ParseLog::create(['status' => 'running', 'started_at' => now()]);
-    try {
-        Artisan::call('app:parse-leagues');
-        $log->update(['status' => 'success', 'output' => Artisan::output(), 'finished_at' => now()]);
-    } catch (\Throwable $e) {
-        $log->update(['status' => 'error', 'output' => Artisan::output() . "\nОшибка: " . $e->getMessage(), 'finished_at' => now()]);
+// Раздельное расписание: каждая лига — свой лог, своё время
+// КХЛ:            08:00 / 20:00
+// Кубок России:   08:20 / 20:20
+// Баскетбол:      08:45 / 20:45  (самый долгий — до ~30 мин с retry)
+
+$scheduledLeagues = [
+    ['league' => 'khl',    'times' => ['08:00', '20:00']],
+    ['league' => 'rfs',    'times' => ['08:20', '20:20']],
+    ['league' => 'basket', 'times' => ['08:45', '20:45']],
+];
+
+foreach ($scheduledLeagues as $item) {
+    foreach ($item['times'] as $time) {
+        Schedule::call(function () use ($item) {
+            $log = ParseLog::create([
+                'league'     => $item['league'],
+                'status'     => 'running',
+                'started_at' => now(),
+            ]);
+            try {
+                Artisan::call('app:parse-leagues', [
+                    '--league' => $item['league'],
+                    '--log-id' => $log->id,
+                ]);
+            } catch (\Throwable $e) {
+                $log->update([
+                    'status'      => 'error',
+                    'output'      => $e->getMessage(),
+                    'finished_at' => now(),
+                ]);
+            }
+        })->dailyAt($time);
     }
-})->twiceDaily();
+}

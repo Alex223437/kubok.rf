@@ -32,13 +32,16 @@
     </div>
 
     <div class="flex items-center gap-3">
-        <x-primary-button wire:click="runParser" wire:loading.attr="disabled">
-            <span wire:loading.remove wire:target="runParser">Запустить парсер</span>
-            <span wire:loading wire:target="runParser">Запускаю...</span>
-        </x-primary-button>
-        <span wire:loading wire:target="runParser" class="text-sm text-gray-500 animate-pulse">
-            Парсер работает, подождите...
-        </span>
+        @if($latestLog && $latestLog->status === 'running')
+            <button wire:click="killParser" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none transition">
+                Остановить
+            </button>
+        @else
+            <x-primary-button wire:click="runParser" wire:loading.attr="disabled">
+                <span wire:loading.remove wire:target="runParser">Запустить парсер</span>
+                <span wire:loading wire:target="runParser">Запускаю...</span>
+            </x-primary-button>
+        @endif
     </div>
 
     {{-- Мини-консоль --}}

@@ -8,7 +8,7 @@ class ParseLog extends Model
 {
     public $timestamps = false;
 
-    protected $fillable = ['league', 'status', 'output', 'started_at', 'finished_at'];
+    protected $fillable = ['league', 'pid', 'status', 'output', 'started_at', 'finished_at'];
 
     protected $casts = [
         'started_at'  => 'datetime',

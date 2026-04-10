@@ -21,6 +21,12 @@ class ParseLeaguesCommand extends Command
     public function handle(KhlParser $khlParser, RfsCupParser $rfsCupParser, BasketballParser $basketballParser)
     {
         $league = $this->option('league');
+        $logId  = $this->option('log-id');
+
+        // Сохраняем PID процесса в лог (для возможности остановить вручную)
+        if ($logId) {
+            ParseLog::where('id', $logId)->update(['pid' => getmypid()]);
+        }
 
         $this->info('Starting parser...');
 
@@ -155,10 +161,13 @@ class ParseLeaguesCommand extends Command
             BasketballStanding::truncate();
             BasketballPlayoffPair::truncate();
 
+            $consecutiveFails = 0;
+
             foreach ($tags as $tag) {
                 $attempt = 0;
                 $maxAttempts = 2;
                 $retryDelay = 60;
+                $tagSucceeded = false;
 
                 while ($attempt < $maxAttempts) {
                     $attempt++;
@@ -237,6 +246,7 @@ class ParseLeaguesCommand extends Command
                             $this->info("Upcoming basketball matches synced for {$tag}: {$upcomingCount}");
                         }
 
+                        $tagSucceeded = true;
                         break; // успех — выходим из retry-цикла
 
                     } catch (\Exception $e) {
@@ -245,6 +255,16 @@ class ParseLeaguesCommand extends Command
                             $this->warn("Retrying {$tag} in {$retryDelay}s...");
                             sleep($retryDelay);
                         }
+                    }
+                }
+
+                if ($tagSucceeded) {
+                    $consecutiveFails = 0;
+                } else {
+                    $consecutiveFails++;
+                    if ($consecutiveFails >= 2) {
+                        $this->error("2 consecutive tag failures — stopping basketball parser early.");
+                        break;
                     }
                 }
 
