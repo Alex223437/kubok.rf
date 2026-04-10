@@ -62,11 +62,113 @@ class RfsCupParser extends BaseParser
             $data = array_merge($data, $matches);
         }
 
-        // 5. Путь регионов — плей-офф (сыгранные + предстоящие)
-        foreach (self::REGIONS_PLAYOFF as $groupName => $roundId) {
-            $matches = $this->fetchRound($roundId, $groupName, '');
-            $data = array_merge($data, $matches);
+        // 5. Путь регионов — плей-офф из сетки на странице турнира
+        if ($url) {
+            $regionsBracket = $this->parseRegionsPlayoffBracket($url);
+            $data = array_merge($data, $regionsBracket);
+        } else {
+            // Fallback: только финал через API
+            foreach (self::REGIONS_PLAYOFF as $groupName => $roundId) {
+                $matches = $this->fetchRound($roundId, $groupName, '');
+                $data = array_merge($data, $matches);
+            }
         }
+
+        return $data;
+    }
+
+    /**
+     * Парсит плей-офф «Путь регионов» из сетки на странице турнира.
+     * Блок: .bet-tournament-table.region, три колонки round-1/2/3.
+     */
+    private function parseRegionsPlayoffBracket(string $url): array
+    {
+        $crawler = $this->getCrawler($url);
+        $data = [];
+
+        $roundMap = [
+            'round-1' => 'Путь регионов. 1/4 финала',
+            'round-2' => 'Путь регионов. 1/2 финала',
+            'round-3' => 'Путь регионов. Финал',
+        ];
+
+        $crawler->filter('.bet-tournament-table.region .playoff-col')->each(function ($col) use (&$data, $roundMap) {
+            $classes = $col->attr('class') ?? '';
+            $groupName = null;
+            foreach ($roundMap as $cls => $name) {
+                if (str_contains($classes, $cls)) {
+                    $groupName = $name;
+                    break;
+                }
+            }
+            if (!$groupName) return;
+
+            $col->filter('.playoff-match-cont')->each(function ($node) use (&$data, $groupName) {
+                $team1 = $node->filter('.team1 .playoff-match-team-title span')->count()
+                    ? trim($node->filter('.team1 .playoff-match-team-title span')->text())
+                    : '';
+                $team2 = $node->filter('.team2 .playoff-match-team-title span')->count()
+                    ? trim($node->filter('.team2 .playoff-match-team-title span')->text())
+                    : '';
+
+                $team1Logo = $node->filter('.team1 .playoff-match-team-logo img')->count()
+                    ? $node->filter('.team1 .playoff-match-team-logo img')->attr('src')
+                    : null;
+                $team2Logo = $node->filter('.team2 .playoff-match-team-logo img')->count()
+                    ? $node->filter('.team2 .playoff-match-team-logo img')->attr('src')
+                    : null;
+
+                $scoreOrDate = null;
+                $isPlayed = false;
+                $penaltyWinner = null;
+
+                $scoreLink = $node->filter('.playoff-match-score a');
+                if ($scoreLink->count()) {
+                    $scoreText = $scoreLink->filter('.score')->count()
+                        ? trim($scoreLink->filter('.score')->text())
+                        : '';
+                    $dateText = $scoreLink->filter('.date-time')->count()
+                        ? trim(preg_replace('/\s+/', ' ', $scoreLink->filter('.date-time')->text()))
+                        : '';
+
+                    if ($scoreText) {
+                        $scoreOrDate = $scoreText;
+                        $isPlayed = true;
+
+                        // Пенальти: (2:4) в .additional
+                        if ($scoreLink->filter('.additional')->count()) {
+                            $additional = trim($scoreLink->filter('.additional')->text());
+                            if (preg_match('/\((\d+):(\d+)\)/', $additional, $pm)) {
+                                $penaltyWinner = ((int)$pm[1] > (int)$pm[2]) ? 'team1' : 'team2';
+                            }
+                        }
+                    } elseif ($dateText) {
+                        // Дата уже в формате dd.mm.yyyy
+                        if (preg_match('/(\d{2}\.\d{2}\.\d{4})/', $dateText, $dm)) {
+                            $scoreOrDate = $dm[1];
+                        } else {
+                            $scoreOrDate = $dateText;
+                        }
+                        $isPlayed = false;
+                    }
+                }
+
+                if (($team1 || $team2) && $scoreOrDate !== null) {
+                    $data[] = [
+                        'group_name'     => $groupName,
+                        'team1'          => $team1,
+                        'team1_logo'     => $team1Logo,
+                        'team1_city'     => null,
+                        'team2'          => $team2,
+                        'team2_logo'     => $team2Logo,
+                        'team2_city'     => null,
+                        'score_or_date'  => $scoreOrDate,
+                        'is_played'      => $isPlayed,
+                        'penalty_winner' => $penaltyWinner,
+                    ];
+                }
+            });
+        });
 
         return $data;
     }
