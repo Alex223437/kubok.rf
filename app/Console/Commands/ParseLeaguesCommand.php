@@ -7,6 +7,7 @@ use App\Services\Parsers\KhlParser;
 use App\Services\Parsers\RfsCupParser;
 use App\Services\Parsers\BasketballParser;
 use App\Models\KhlStanding;
+use App\Models\ParseLog;
 use App\Models\RfsMatch;
 use App\Models\UpcomingMatch;
 use App\Models\BasketballStanding;
@@ -14,7 +15,7 @@ use App\Models\BasketballPlayoffPair;
 
 class ParseLeaguesCommand extends Command
 {
-    protected $signature = 'app:parse-leagues {--league= : Specify the league to parse (khl, rfs, basket)}';
+    protected $signature = 'app:parse-leagues {--league= : Specify the league to parse (khl, rfs, basket)} {--log-id= : ParseLog ID to update on completion}';
     protected $description = 'Parse sports leagues tables and save to database';
 
     public function handle(KhlParser $khlParser, RfsCupParser $rfsCupParser, BasketballParser $basketballParser)
@@ -252,5 +253,12 @@ class ParseLeaguesCommand extends Command
         }
 
         $this->info('Parsing complete.');
+
+        if ($logId = $this->option('log-id')) {
+            ParseLog::where('id', $logId)->update([
+                'status'      => 'success',
+                'finished_at' => now(),
+            ]);
+        }
     }
 }

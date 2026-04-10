@@ -1,4 +1,4 @@
-<div>
+<div @if($latestLog && $latestLog->status === 'running') wire:poll.5000ms @endif>
     <h3 class="text-lg font-semibold text-gray-800 mb-4">Парсер данных</h3>
 
     {{-- Статус последнего запуска --}}

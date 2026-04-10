@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Models\ParseLog;
-use Illuminate\Support\Facades\Artisan;
 use Livewire\Component;
 
 class ParserDashboard extends Component
@@ -18,23 +17,11 @@ class ParserDashboard extends Component
             'started_at' => now(),
         ]);
 
-        try {
-            $args = $this->league ? ['--league' => $this->league] : [];
-            Artisan::call('app:parse-leagues', $args);
-            $output = Artisan::output();
+        $php     = PHP_BINARY;
+        $artisan = base_path('artisan');
+        $league  = $this->league ? '--league=' . escapeshellarg($this->league) : '';
 
-            $log->update([
-                'status'      => 'success',
-                'output'      => $output,
-                'finished_at' => now(),
-            ]);
-        } catch (\Throwable $e) {
-            $log->update([
-                'status'      => 'error',
-                'output'      => ($output ?? '') . "\nОшибка: " . $e->getMessage(),
-                'finished_at' => now(),
-            ]);
-        }
+        exec("nohup {$php} {$artisan} app:parse-leagues {$league} --log-id={$log->id} > /dev/null 2>&1 &");
     }
 
     public function render()
