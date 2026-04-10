@@ -15,7 +15,7 @@ use App\Models\BasketballPlayoffPair;
 
 class ParseLeaguesCommand extends Command
 {
-    protected $signature = 'app:parse-leagues {--league= : Specify the league to parse (khl, rfs, basket)} {--log-id= : ParseLog ID to update on completion}';
+    protected $signature = 'app:parse-leagues {--league= : Specify the league to parse (khl, rfs, basket)} {--basket-group= : Basketball group: super (msl+wsl), vysshaya (mhl+whl), premier (wpremier)} {--log-id= : ParseLog ID to update on completion}';
     protected $description = 'Parse sports leagues tables and save to database';
 
     public function handle(KhlParser $khlParser, RfsCupParser $rfsCupParser, BasketballParser $basketballParser)
@@ -156,7 +156,16 @@ class ParseLeaguesCommand extends Command
 
         if (!$league || $league === 'basket') {
             $this->info('Parsing Basketball standings...');
-            $tags = ['msl', 'mhl', 'wpremier', 'wsl', 'whl'];
+
+            $basketGroupMap = [
+                'super'    => ['msl', 'wsl'],
+                'vysshaya' => ['mhl', 'whl'],
+                'premier'  => ['wpremier'],
+            ];
+            $basketGroup = $this->option('basket-group');
+            $tags = $basketGroup && isset($basketGroupMap[$basketGroup])
+                ? $basketGroupMap[$basketGroup]
+                : ['msl', 'wsl', 'mhl', 'whl', 'wpremier'];
 
             BasketballStanding::truncate();
             BasketballPlayoffPair::truncate();

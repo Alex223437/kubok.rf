@@ -15,6 +15,7 @@
           <x-nav-link :href="route('dashboard')" :active="Route::is('dashboard')">Dashboard</x-nav-link>
           <x-nav-link :href="route('admin-pages')" :active="Route::is('admin-pages')">Страницы кубков</x-nav-link>
           <x-nav-link :href="route('admin-banners')" :active="Route::is('admin-banners')">Баннеры</x-nav-link>
+          <x-nav-link :href="route('parser')" :active="Route::is('parser')">Парсер</x-nav-link>
           <x-nav-link :href="route('options')" :active="Route::is('options')">Настройки</x-nav-link>
         </div>
       </div>
@@ -76,6 +77,7 @@
       </x-responsive-nav-link>
       <x-responsive-nav-link :href="route('admin-banners')" :active="Route::is('admin-banners')">Баннеры
       </x-responsive-nav-link>
+      <x-responsive-nav-link :href="route('parser')" :active="Route::is('parser')">Парсер</x-responsive-nav-link>
       <x-responsive-nav-link :href="route('options')" :active="Route::is('options')">Настройки</x-responsive-nav-link>
     </div>
 

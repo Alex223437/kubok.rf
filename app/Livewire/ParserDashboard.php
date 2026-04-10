@@ -8,21 +8,32 @@ use Livewire\Component;
 class ParserDashboard extends Component
 {
     public string $league = '';
+    public string $basketGroup = '';
 
     public function runParser(): void
     {
+        $logLeague = $this->league ?: null;
+        if ($this->league === 'basket' && $this->basketGroup) {
+            $logLeague = 'basket-' . $this->basketGroup;
+        }
+
         $log = ParseLog::create([
-            'league'     => $this->league ?: null,
+            'league'     => $logLeague,
             'status'     => 'running',
             'started_at' => now(),
         ]);
 
         $php     = PHP_BINARY;
         $artisan = base_path('artisan');
-        $league  = $this->league ? '--league=' . escapeshellarg($this->league) : '';
+        $args    = "--log-id={$log->id}";
+        if ($this->league) {
+            $args .= ' --league=' . escapeshellarg($this->league);
+        }
+        if ($this->league === 'basket' && $this->basketGroup) {
+            $args .= ' --basket-group=' . escapeshellarg($this->basketGroup);
+        }
 
-        // Запускаем в фоне и захватываем PID через $!
-        $pid = (int) shell_exec("nohup {$php} {$artisan} app:parse-leagues {$league} --log-id={$log->id} > /dev/null 2>&1 & echo \$!");
+        $pid = (int) shell_exec("nohup {$php} {$artisan} app:parse-leagues {$args} > /dev/null 2>&1 & echo \$!");
         if ($pid) {
             $log->update(['pid' => $pid]);
         }

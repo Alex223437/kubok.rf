@@ -13,12 +13,6 @@
         </div>
       </div>
 
-      <div class="mt-6 bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6">
-          <livewire:parser-dashboard />
-          <p class="mt-4 text-sm text-gray-500">Автоматически запускается каждые 12 часов.</p>
-        </div>
-      </div>
     </div>
   </div>
 </x-app-layout>

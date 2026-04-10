@@ -10,6 +10,7 @@ Route::get('/page/{code}', [Controllers\PagesController::class, 'page'])->name('
 Route::middleware('auth')->group(function () {
     Route::prefix('admin')->middleware(\App\Http\Middleware\IsAdmin::class)->group(function () {
         Route::get('/', fn() => view('dashboard'))->name('dashboard');
+        Route::get('parser', fn() => view('parser'))->name('parser');
         Route::get('pages', Livewire\Pages::class)->name('admin-pages');
         Route::get('pages/{id}', Livewire\PageEdit::class)->name('admin-page');
         Route::get('banners', Livewire\Banners::class)->name('admin-banners');

@@ -3,7 +3,7 @@
 
     {{-- Статус последнего запуска --}}
     @if($latestLog)
-        <div class="mb-4 flex items-center gap-3 text-sm">
+        <div class="mb-4 flex items-center gap-3 text-sm flex-wrap">
             <span class="text-gray-500">Последнее обновление:</span>
             <span class="font-medium text-gray-800">{{ $latestLog->started_at->format('d.m.Y в H:i') }}</span>
             @if($latestLog->status === 'success')
@@ -22,10 +22,27 @@
     @endif
 
     {{-- Форма запуска --}}
-    <div class="flex flex-wrap gap-4 mb-4">
-        @foreach(['all' => 'Все', 'khl' => 'КХЛ', 'rfs' => 'Кубок России', 'basket' => 'Баскетбол'] as $value => $label)
+    <div class="flex flex-wrap gap-x-6 gap-y-2 mb-4 text-sm">
         <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" wire:model="league" value="{{ $value === 'all' ? '' : $value }}">
+            <input type="radio" wire:model="league" value="" wire:change="$set('basketGroup', '')">
+            <span>Все</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" wire:model="league" value="khl" wire:change="$set('basketGroup', '')">
+            <span>КХЛ</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" wire:model="league" value="rfs" wire:change="$set('basketGroup', '')">
+            <span>Кубок России</span>
+        </label>
+
+        <span class="text-gray-300 self-center hidden sm:inline">|</span>
+
+        @foreach(['super' => 'Баскет: Супер Лига', 'vysshaya' => 'Баскет: Высшая Лига', 'premier' => 'Баскет: Премьер Лига'] as $group => $label)
+        <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" wire:model="league" value="basket"
+                   wire:change="$set('basketGroup', '{{ $group }}')"
+                   @if($league === 'basket' && $basketGroup === $group) checked @endif>
             <span>{{ $label }}</span>
         </label>
         @endforeach
