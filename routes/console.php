@@ -10,6 +10,9 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 use App\Models\ParseLog;
 
+// Обработка очереди каждую минуту через CLI (exec не заблокирован в CLI)
+Schedule::command('queue:work --stop-when-empty --timeout=1800')->everyMinute()->runInBackground()->withoutOverlapping();
+
 // Расписание:
 // КХЛ:              08:00 / 20:00
 // Кубок России:     08:20 / 20:20
