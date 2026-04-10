@@ -109,6 +109,21 @@
     .bsk-league-title { font-size: 18px; }
 }
 
+/* Одиночный заголовок (без женской лиги) — растянуть на всю ширину как таб-контейнеры */
+.bsk-solo-header {
+    margin: 0 calc(-40 * 100vw / 1920);
+    padding-left: calc(80 * 100vw / 1920);
+    padding-right: calc(80 * 100vw / 1920);
+}
+
+/* Неактивная (disabled) кнопка переключателя */
+.rfs-header__buttons .button:disabled,
+.rfs-header__buttons .button[disabled] {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .bsk-table-section + .bsk-table-section {
     padding-top: calc(10 * 100vw / 1920);
 }
@@ -150,6 +165,12 @@
 }
 
 @media (max-width: 1024px) {
+    .bsk-solo-header {
+        margin: 0 calc(-10 * 100vw / 1920);
+        padding-left: calc(10 * 100vw / 1920);
+        padding-right: calc(10 * 100vw / 1920);
+    }
+
     .bsk-cell-hdr { font-size: 11px; }
     .bsk-cell-club { font-size: 13px; }
     .bsk-cell-num { font-size: 13px; }

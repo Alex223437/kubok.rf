@@ -59,8 +59,8 @@
 {{-- ════════════════════════════════════════════
      ШАПКА с переключателями
 ════════════════════════════════════════════ --}}
-@if($hasRegular || $womenTag)
-<div class="rfs-header {{ $womenTag ? 'bsk-dual-header' : '' }}">
+@if($hasRegular || $womenTag || $bracketPairs->isNotEmpty())
+<div class="rfs-header {{ $womenTag ? 'bsk-dual-header' : 'bsk-solo-header' }}">
 
     @if($womenTag)
     <div class="rfs__title">Турнирная таблица</div>
@@ -101,10 +101,10 @@
     {{-- Стандартная шапка (без женской лиги) --}}
     <div class="rfs__title">Турнирная таблица</div>
     <div class="rfs-header__buttons">
-        <button class="button is-active" type="button" id="bsk-btn-standings">
+        <button class="button {{ $hasRegular ? 'is-active' : '' }}" type="button" id="bsk-btn-standings" {{ !$hasRegular ? 'disabled' : '' }}>
             <div class="button__text">Чемпионат</div>
         </button>
-        <button class="button" type="button" id="bsk-btn-playoff">
+        <button class="button {{ !$hasRegular ? 'is-active' : '' }}" type="button" id="bsk-btn-playoff">
             <div class="button__text">Плей-офф</div>
         </button>
     </div>
