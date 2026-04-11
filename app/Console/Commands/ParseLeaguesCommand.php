@@ -167,8 +167,8 @@ class ParseLeaguesCommand extends Command
                 ? $basketGroupMap[$basketGroup]
                 : ['msl', 'wsl', 'mhl', 'whl', 'wpremier'];
 
-            BasketballStanding::truncate();
-            BasketballPlayoffPair::truncate();
+            BasketballStanding::whereIn('tag', $tags)->delete();
+            BasketballPlayoffPair::whereIn('tag', $tags)->delete();
 
             $consecutiveFails = 0;
 
