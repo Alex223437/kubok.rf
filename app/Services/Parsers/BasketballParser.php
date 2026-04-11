@@ -53,8 +53,12 @@ class BasketballParser extends BaseParser
             $responseFull = Http::withHeaders($headers)->get($urlFull);
             if ($responseFull->successful()) {
                 $jsonFull = $responseFull->json();
-                // Берём все RoundRobin из /standings которых ещё нет в actual-standings
-                $existingNames = collect($json['items'] ?? [])->pluck('comp.name')->toArray();
+                // Берём все RoundRobin из /standings которых ещё нет в actual-standings.
+                // В existingNames — только RoundRobin (Stage-элементы с пустыми standings не считаются).
+                $existingNames = collect($json['items'] ?? [])
+                    ->filter(fn($i) => ($i['comp']['compType'] ?? '') === 'RoundRobin')
+                    ->pluck('comp.name')
+                    ->toArray();
                 $missingItems = collect($jsonFull['items'] ?? [])->filter(fn($i) =>
                     ($i['comp']['compType'] ?? '') === 'RoundRobin' &&
                     !in_array($i['comp']['name'] ?? '', $existingNames)
@@ -81,6 +85,11 @@ class BasketballParser extends BaseParser
 
             // Только RoundRobin секции (регулярка + игры за места)
             if ($compType !== 'RoundRobin') continue;
+
+            // Нормализуем имя: "Регулярный чемпионат. Первый раунд" → "Регулярный чемпионат"
+            if (str_starts_with($compName, 'Регулярный чемпионат')) {
+                $compName = 'Регулярный чемпионат';
+            }
 
             $standings = $item['standings'] ?? [];
             if (empty($standings)) continue;
