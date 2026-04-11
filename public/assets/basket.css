@@ -76,7 +76,6 @@
     margin: 0 calc(-40 * 100vw / 1920);
     padding-left: calc(80 * 100vw / 1920);
     padding-right: calc(80 * 100vw / 1920);
-    padding-bottom: calc(40 * 100vw / 1920);
 }
 
 .bsk-league-group {
@@ -162,6 +161,10 @@
 
 .bsk-playoff, .bsk-bracket--playoff {
     padding-bottom: 0;
+}
+
+#bsk-tab-standings {
+    padding-top: calc(40 * 100vw / 1920);
 }
 
 @media (max-width: 1024px) {
