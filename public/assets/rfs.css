@@ -880,7 +880,28 @@
     .rfs-bracket__date { font-size: 13px; line-height: 13px; }
     .rfs-bracket__scores { min-width: 70px; }
 
+    #rfs-tab-regions .rfs-bracket {
+        grid-template-columns: 1fr;
+    }
+
     .rfs-bracket__pair {
         flex-direction: column;
+        gap: 10px;
+    }
+
+    .rfs-bracket__stage-row {
+        display: none;
+    }
+
+    .rfs-bracket__stage-title {
+        font-size: 14px;
+    }
+
+    .rfs-bracket__penalty {
+        font-size: 14px;
+    }
+
+    .rfs-bracket__pair .rfs-bracket__scores {
+        min-width: 70px;
     }
 }
