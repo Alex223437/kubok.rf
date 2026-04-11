@@ -53,12 +53,13 @@ class BasketballParser extends BaseParser
             $responseFull = Http::withHeaders($headers)->get($urlFull);
             if ($responseFull->successful()) {
                 $jsonFull = $responseFull->json();
-                // Берём регулярку из /standings и объединяем с остальным из /actual-standings
-                $regularItems = collect($jsonFull['items'] ?? [])->filter(fn($i) =>
+                // Берём все RoundRobin из /standings которых ещё нет в actual-standings
+                $existingNames = collect($json['items'] ?? [])->pluck('comp.name')->toArray();
+                $missingItems = collect($jsonFull['items'] ?? [])->filter(fn($i) =>
                     ($i['comp']['compType'] ?? '') === 'RoundRobin' &&
-                    str_contains($i['comp']['name'] ?? '', 'Регулярный')
+                    !in_array($i['comp']['name'] ?? '', $existingNames)
                 )->values()->all();
-                $json['items'] = array_merge($regularItems, $json['items'] ?? []);
+                $json['items'] = array_merge($missingItems, $json['items'] ?? []);
             }
         }
 
