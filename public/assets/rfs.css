@@ -649,6 +649,10 @@
     align-items: stretch;
 }
 
+#rfs-tab-regions .rfs-bracket {
+    grid-template-columns: 2fr 2fr 1fr;
+}
+
 .rfs-bracket__round {
     display: flex;
     flex-direction: column;
