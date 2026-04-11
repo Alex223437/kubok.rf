@@ -238,6 +238,12 @@
             <div class="rfs-bracket__round">
                 <div class="rfs-bracket__round-title">{{ $round['title'] }}</div>
                 <div class="rfs-bracket__matches">
+                    @if($round['two_legged'])
+                    <div class="rfs-bracket__pair rfs-bracket__stage-row">
+                        <div class="rfs-bracket__stage-title">Этап 1</div>
+                        <div class="rfs-bracket__stage-title">Этап 2</div>
+                    </div>
+                    @endif
                     @for($i = 0; $i < $round['slots']; $i++)
                     @php
                         $match  = $round['matches']->get($i);

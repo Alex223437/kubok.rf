@@ -715,10 +715,45 @@
     min-width: 0;
 }
 
+.rfs-bracket__pair .rfs-bracket__scores {
+    min-width: 0;
+}
+
+.rfs-bracket__pair .rfs-bracket__logo,
+.rfs-bracket__pair .rfs-bracket__logo-placeholder {
+    max-width: 60px;
+    max-height: 60px;
+}
+
+.rfs-bracket__pair .rfs-bracket__team-name {
+    max-width: 100%;
+    overflow-wrap: break-word;
+}
+
 .rfs-bracket__penalty {
-    font-size: 13px;
-    color: #888;
-    line-height: 1;
+    font-size: calc(24 * 100vw / 1920);
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    color: #000;
+    text-transform: uppercase;
+}
+
+.rfs-bracket__stage-row {
+    margin-bottom: 8px;
+}
+
+.rfs-bracket__stage-title {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    color: #000;
+    font-family: "Cera Pro", sans-serif;
+    font-size: calc(24 * 100vw / 1920);
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    text-transform: uppercase;
 }
 
 /* ── Команда: лого сверху, название снизу ─ */
