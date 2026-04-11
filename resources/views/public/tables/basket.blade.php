@@ -14,7 +14,7 @@
         ->get();
 
     $regularRows  = $allStandings->where('section', 'Регулярный чемпионат')->values();
-    $hasRegular   = $regularRows->isNotEmpty() && !($defaultPlayoff ?? false);
+    $hasRegular   = $regularRows->isNotEmpty();
     $extra5_8     = $allStandings->whereIn('section', ['Игры за 5-8 места', 'Игры за 5-6 места'])->values();
     $extra11_14   = $allStandings->whereIn('section', ['Игры за 11-14 места', 'Игры за 9-12 места', 'Игры за 9-10 места'])->values();
 
@@ -101,7 +101,7 @@
     {{-- Стандартная шапка (без женской лиги) --}}
     <div class="rfs__title">Турнирная таблица</div>
     <div class="rfs-header__buttons">
-        <button class="button {{ $hasRegular ? 'is-active' : '' }}" type="button" id="bsk-btn-standings" {{ !$hasRegular ? 'disabled' : '' }}>
+        <button class="button {{ $hasRegular ? 'is-active' : '' }}" type="button" id="bsk-btn-standings">
             <div class="button__text">Чемпионат</div>
         </button>
         <button class="button {{ !$hasRegular ? 'is-active' : '' }}" type="button" id="bsk-btn-playoff">
