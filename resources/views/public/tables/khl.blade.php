@@ -198,7 +198,11 @@
 @endpush
 
 @php
-    $standings  = \App\Models\KhlStanding::orderBy('rank')->get();
+    $standings  = \App\Models\KhlStanding::orderBy('points', 'desc')
+        ->orderBy('ot_wins', 'desc')
+        ->orderBy('so_wins', 'desc')
+        ->orderBy('goals', 'desc')
+        ->get();
     $hasDivData = $standings->whereNotNull('conference')->isNotEmpty();
 
     $western       = $standings->where('conference', 'Западная')->values();
