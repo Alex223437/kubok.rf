@@ -725,6 +725,10 @@
     max-height: 60px;
 }
 
+.rfs-bracket__pair .rfs-bracket__team {
+    min-width: 0;
+}
+
 .rfs-bracket__pair .rfs-bracket__team-name {
     max-width: 100%;
     overflow-wrap: break-word;
