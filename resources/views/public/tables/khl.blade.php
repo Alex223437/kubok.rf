@@ -198,10 +198,10 @@
 @endpush
 
 @php
-    $standings  = \App\Models\KhlStanding::orderBy('points', 'desc')
-        ->orderBy('ot_wins', 'desc')
-        ->orderBy('so_wins', 'desc')
-        ->orderBy('goals', 'desc')
+    $standings  = \App\Models\KhlStanding::orderByRaw('CAST(points AS UNSIGNED) DESC')
+        ->orderByRaw('CAST(ot_wins AS UNSIGNED) DESC')
+        ->orderByRaw('CAST(so_wins AS UNSIGNED) DESC')
+        ->orderByRaw('CAST(goals AS UNSIGNED) DESC')
         ->get();
     $hasDivData = $standings->whereNotNull('conference')->isNotEmpty();
 
@@ -228,7 +228,7 @@
 
     {{-- Вкладка: ЧЕМПИОНАТ --}}
     <div id="khl-tab-champ" style="padding-top: calc(20 * 100vw / 1920);">
-        @include('partials.khl-standings-table', ['rows' => $standings, 'title' => 'КХЛ'])
+        @include('partials.khl-standings-table', ['rows' => $standings, 'title' => 'Регулярный чемпионат'])
     </div>
 
     {{-- Вкладка: ПО КОНФЕРЕНЦИЯМ --}}

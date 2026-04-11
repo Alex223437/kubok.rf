@@ -10,8 +10,7 @@
     // Мужская лига
     $allStandings = \App\Models\BasketballStanding::where('tag', $leagueTag)
         ->orderByRaw('CASE WHEN games = 0 OR games IS NULL THEN 1 ELSE 0 END')
-        ->orderBy('points', 'desc')
-        ->orderByRaw('CAST(REPLACE(diff, "+", "") AS SIGNED) DESC')
+        ->orderBy('rank')
         ->get();
 
     $regularRows  = $allStandings->where('section', 'Регулярный чемпионат')->values();
@@ -33,8 +32,7 @@
     if ($womenTag) {
         $wAllStandings = \App\Models\BasketballStanding::where('tag', $womenTag)
             ->orderByRaw('CASE WHEN games = 0 OR games IS NULL THEN 1 ELSE 0 END')
-            ->orderBy('points', 'desc')
-            ->orderByRaw('CAST(REPLACE(diff, "+", "") AS SIGNED) DESC')
+            ->orderBy('rank')
             ->get();
 
         $wRegularRows  = $wAllStandings->where('section', 'Регулярный чемпионат')->values();
