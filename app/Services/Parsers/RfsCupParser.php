@@ -78,6 +78,63 @@ class RfsCupParser extends BaseParser
     }
 
     /**
+     * Парсит готовые таблицы группового этапа (Путь РПЛ) со страницы турнира.
+     * Возвращает массив строк: group_name, position, team, logo, games, wins,
+     * penalty_wins, losses, penalty_losses, goals_for, goals_against, points.
+     */
+    public function parseGroupStandings(string $url): array
+    {
+        $crawler = $this->getCrawler($url);
+        $standings = [];
+
+        // Ищем все блоки групп: заголовок — <th> с текстом "Группа X"
+        $crawler->filter('.bet-tournament-rpl__table')->each(function ($table) use (&$standings) {
+            // Название группы из первого <th>
+            $groupHeader = $table->filter('thead th')->first();
+            if (!$groupHeader->count()) return;
+            $groupRaw = trim($groupHeader->text());
+            if (!str_starts_with($groupRaw, 'Группа')) return;
+            $groupName = 'Путь РПЛ. ' . $groupRaw;
+
+            $position = 1;
+            $table->filter('tbody tr')->each(function ($row) use (&$standings, &$position, $groupName) {
+                $cells = $row->filter('td');
+                if ($cells->count() < 8) return;
+
+                $team = trim($cells->eq(1)->filter('.bet-tournament-rpl__table-name')->text());
+                if (!$team) return;
+
+                $logo = $cells->eq(1)->filter('img')->count()
+                    ? $cells->eq(1)->filter('img')->attr('src')
+                    : null;
+
+                // col7 = М (goals): формат "19-5", col8 = О (points)
+                $goalsRaw = trim($cells->eq(7)->text());
+                $goalsParts = explode('-', $goalsRaw);
+                $gf = (int) ($goalsParts[0] ?? 0);
+                $ga = (int) ($goalsParts[1] ?? 0);
+
+                $standings[] = [
+                    'group_name'     => $groupName,
+                    'position'       => $position++,
+                    'team'           => $team,
+                    'logo'           => $logo,
+                    'games'          => (int) trim($cells->eq(2)->text()),
+                    'wins'           => (int) trim($cells->eq(3)->text()),
+                    'penalty_wins'   => (int) trim($cells->eq(4)->text()),
+                    'losses'         => (int) trim($cells->eq(5)->text()),
+                    'penalty_losses' => (int) trim($cells->eq(6)->text()),
+                    'goals_for'      => $gf,
+                    'goals_against'  => $ga,
+                    'points'         => (int) trim($cells->eq(8)->text()),
+                ];
+            });
+        });
+
+        return $standings;
+    }
+
+    /**
      * Парсит плей-офф «Путь регионов» из сетки на странице турнира.
      * Блок: .bet-tournament-table.region, три колонки round-1/2/3.
      */

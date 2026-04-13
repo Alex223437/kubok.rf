@@ -9,6 +9,7 @@ use App\Services\Parsers\BasketballParser;
 use App\Models\KhlStanding;
 use App\Models\ParseLog;
 use App\Models\RfsMatch;
+use App\Models\RfsGroupStanding;
 use App\Models\UpcomingMatch;
 use App\Models\BasketballStanding;
 use App\Models\BasketballPlayoffPair;
@@ -147,6 +148,16 @@ class ParseLeaguesCommand extends Command
                     ]);
                 }
                 $this->info('Upcoming RFS matches synced: ' . UpcomingMatch::where('sport', 'rfs')->count());
+
+                // Парсим таблицы групп напрямую с турнирной страницы
+                $groupStandingsData = $rfsCupParser->parseGroupStandings('https://www.rfs.ru/cup/tournament');
+                if (!empty($groupStandingsData)) {
+                    RfsGroupStanding::truncate();
+                    foreach ($groupStandingsData as $row) {
+                        RfsGroupStanding::create($row);
+                    }
+                    $this->info('Group standings parsed: ' . count($groupStandingsData) . ' rows.');
+                }
 
                 $this->info('RFS Cup parsed successfully.');
             } catch (\Exception $e) {

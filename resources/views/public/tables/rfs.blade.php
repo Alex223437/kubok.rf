@@ -18,63 +18,23 @@
     // Путь регионов: плей-офф
     $regionsPlayoff = $allMatches->where('group_name', 'Путь регионов. Плей-офф');
 
-    // Считаем турнирные таблицы из результатов групповых матчей (только Путь РПЛ. Группа *)
+    // Таблицы групп — берём из rfs_group_standings (парсятся напрямую с турнирной страницы)
     $groupStandings = [];
-    foreach ($allMatches->where('is_played', true)
-        ->filter(fn($m) => str_starts_with($m->group_name ?? '', 'Путь РПЛ. Группа'))
-        ->groupBy('group_name') as $groupName => $groupMatches) {
+    foreach (\App\Models\RfsGroupStanding::orderBy('group_name')->orderBy('position')->get()->groupBy('group_name') as $groupName => $rows) {
         $teams = [];
-
-        foreach ($groupMatches as $match) {
-            if (!preg_match('/^(\d+):(\d+)$/', $match->score_or_date, $sc)) continue;
-            $g1 = (int)$sc[1];
-            $g2 = (int)$sc[2];
-
-            foreach ([[$match->team1, $match->team1_logo], [$match->team2, $match->team2_logo]] as [$team, $logo]) {
-                if (!isset($teams[$team])) {
-                    $teams[$team] = ['logo' => $logo, 'И' => 0, 'В' => 0, 'ВП' => 0, 'П' => 0, 'ПП' => 0, 'gf' => 0, 'ga' => 0, 'О' => 0];
-                }
-            }
-
-            $teams[$match->team1]['И']++;
-            $teams[$match->team2]['И']++;
-            $teams[$match->team1]['gf'] += $g1;
-            $teams[$match->team1]['ga'] += $g2;
-            $teams[$match->team2]['gf'] += $g2;
-            $teams[$match->team2]['ga'] += $g1;
-
-            $pw = $match->penalty_winner;
-            if ($pw) {
-                $winner = ($pw === 'team1') ? $match->team1 : $match->team2;
-                $loser  = ($pw === 'team1') ? $match->team2 : $match->team1;
-                $teams[$winner]['ВП']++;
-                $teams[$winner]['О'] += 2;
-                $teams[$loser]['ПП']++;
-                $teams[$loser]['О'] += 1;
-            } elseif ($g1 > $g2) {
-                $teams[$match->team1]['В']++;
-                $teams[$match->team1]['О'] += 3;
-                $teams[$match->team2]['П']++;
-            } elseif ($g2 > $g1) {
-                $teams[$match->team2]['В']++;
-                $teams[$match->team2]['О'] += 3;
-                $teams[$match->team1]['П']++;
-            } else {
-                $teams[$match->team1]['О']++;
-                $teams[$match->team2]['О']++;
-            }
+        foreach ($rows as $row) {
+            $teams[$row->team] = [
+                'logo' => $row->logo,
+                'И'    => $row->games,
+                'В'    => $row->wins,
+                'ВП'   => $row->penalty_wins,
+                'П'    => $row->losses,
+                'ПП'   => $row->penalty_losses,
+                'gf'   => $row->goals_for,
+                'ga'   => $row->goals_against,
+                'О'    => $row->points,
+            ];
         }
-
-        if (empty($teams)) continue;
-
-        uasort($teams, function ($a, $b) {
-            if ($b['О'] !== $a['О']) return $b['О'] - $a['О'];
-            $diffA = $a['gf'] - $a['ga'];
-            $diffB = $b['gf'] - $b['ga'];
-            if ($diffB !== $diffA) return $diffB - $diffA;
-            return $b['gf'] - $a['gf'];
-        });
-
         $groupStandings[$groupName] = $teams;
     }
 
