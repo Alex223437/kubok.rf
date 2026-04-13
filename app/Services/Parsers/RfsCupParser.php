@@ -87,12 +87,11 @@ class RfsCupParser extends BaseParser
         $crawler = $this->getCrawler($url);
         $standings = [];
 
-        // Ищем все блоки групп: заголовок — <th> с текстом "Группа X"
-        $crawler->filter('.bet-tournament-rpl__table')->each(function ($table) use (&$standings) {
-            // Название группы из первого <th>
-            $groupHeader = $table->filter('thead th')->first();
-            if (!$groupHeader->count()) return;
-            $groupRaw = trim($groupHeader->text());
+        // Таблицы групп — обычный <table> с заголовком в .bet-tournament-rpl__table-title
+        $crawler->filter('table')->each(function ($table) use (&$standings) {
+            $titleCell = $table->filter('.bet-tournament-rpl__table-title');
+            if (!$titleCell->count()) return;
+            $groupRaw = trim($titleCell->text());
             if (!str_starts_with($groupRaw, 'Группа')) return;
             $groupName = 'Путь РПЛ. ' . $groupRaw;
 
@@ -101,7 +100,7 @@ class RfsCupParser extends BaseParser
                 $cells = $row->filter('td');
                 if ($cells->count() < 8) return;
 
-                $team = trim($cells->eq(1)->filter('.bet-tournament-rpl__table-name')->text());
+                $team = trim($cells->eq(1)->filter('.bet-tournament-rpl__table-name.js-stub-name')->text());
                 if (!$team) return;
 
                 $logo = $cells->eq(1)->filter('img')->count()
