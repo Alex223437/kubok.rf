@@ -19,8 +19,9 @@
     $regionsPlayoff = $allMatches->where('group_name', 'Путь регионов. Плей-офф');
 
     // Таблицы групп — берём из rfs_group_standings (парсятся напрямую с турнирной страницы)
+    $groupOrder = ['Путь РПЛ. Группа А' => 0, 'Путь РПЛ. Группа B' => 1, 'Путь РПЛ. Группа C' => 2, 'Путь РПЛ. Группа D' => 3];
     $groupStandings = [];
-    foreach (\App\Models\RfsGroupStanding::orderBy('group_name')->orderBy('position')->get()->groupBy('group_name') as $groupName => $rows) {
+    foreach (\App\Models\RfsGroupStanding::orderBy('position')->get()->groupBy('group_name') as $groupName => $rows) {
         $teams = [];
         foreach ($rows as $row) {
             $teams[$row->team] = [
@@ -37,6 +38,7 @@
         }
         $groupStandings[$groupName] = $teams;
     }
+    uksort($groupStandings, fn($a, $b) => ($groupOrder[$a] ?? 99) <=> ($groupOrder[$b] ?? 99));
 
     // Хелпер: подготовить строки для x-bracket-match из score_or_date
     function rfs_bracket_lines(string $scoreOrDate): array {
