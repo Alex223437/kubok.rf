@@ -26,7 +26,7 @@
     $rounds = [
         ['title' => '1/4 ФИНАЛА', 'pairs' => $bracketPairs->where('round', 4)->values(), 'slots' => 4],
         ['title' => '1/2 ФИНАЛА', 'pairs' => $bracketPairs->where('round', 2)->values(), 'slots' => 2],
-        ['title' => 'ФИНАЛ',      'pairs' => $bracketPairs->where('round', 1)->values(), 'slots' => 2],
+        ['title' => 'ФИНАЛ',      'pairs' => $bracketPairs->where('round', 1)->sortBy('sort')->take(1)->values(), 'slots' => 1],
     ];
 
     // Женская лига (только если передан $womenTag)
@@ -48,7 +48,7 @@
         $wRounds = [
             ['title' => '1/4 ФИНАЛА', 'pairs' => $wBracketPairs->where('round', 4)->values(), 'slots' => 4],
             ['title' => '1/2 ФИНАЛА', 'pairs' => $wBracketPairs->where('round', 2)->values(), 'slots' => 2],
-            ['title' => 'ФИНАЛ',      'pairs' => $wBracketPairs->where('round', 1)->values(), 'slots' => 2],
+            ['title' => 'ФИНАЛ',      'pairs' => $wBracketPairs->where('round', 1)->sortBy('sort')->take(1)->values(), 'slots' => 1],
         ];
 
         $wThirdPlacePair = $wBracketPairs->where('round', 1)->sortBy('sort')->last();
