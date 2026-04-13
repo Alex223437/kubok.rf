@@ -349,10 +349,13 @@
 }
 
 .bsk-pcard__date {
-    font-size: calc(36 * 100vw / 1920);
-    font-weight: 700;
+    font-size: calc(22 * 100vw / 1920);
+    font-weight: 400;
+    font-style: normal;
     color: #000;
-    line-height: 1;
+    line-height: calc(22 * 100vw / 1920);
+    text-align: center;
+    text-transform: uppercase;
 }
 
 .bsk-pcard__time {
@@ -399,7 +402,8 @@
     }
 
     .bsk-pcard__date {
-        font-size: 20px;
+        font-size: 22px;
+        line-height: 22px;
     }
 
     .bsk-pcard__time {
