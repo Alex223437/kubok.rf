@@ -247,97 +247,94 @@ class RfsCupParser extends BaseParser
                     ? trim($item->filter('.bet-tournament__date')->text())
                     : '';
 
-                $team1Node = $item->filter('.tour-match__team.first');
-                $team2Node = $item->filter('.tour-match__team.last');
+                // Один date-блок может содержать несколько матчей — итерируем по каждому
+                $matches = $item->filter('.bet-tournament-region__match');
+                if ($matches->count() === 0) return;
 
-                if (!$team1Node->count() || !$team2Node->count()) {
-                    return;
-                }
+                $matches->each(function ($matchNode) use (&$data, $groupName, $date) {
+                    $team1Node = $matchNode->filter('.tour-match__team.first');
+                    $team2Node = $matchNode->filter('.tour-match__team.last');
 
-                $team1 = trim($team1Node->filter('.tour-match__name')->text());
-                $team2 = trim($team2Node->filter('.tour-match__name')->text());
+                    if (!$team1Node->count() || !$team2Node->count()) {
+                        return;
+                    }
 
-                $team1Logo = $team1Node->filter('img')->count()
-                    ? $team1Node->filter('img')->attr('src')
-                    : null;
-                $team2Logo = $team2Node->filter('img')->count()
-                    ? $team2Node->filter('img')->attr('src')
-                    : null;
+                    $team1 = trim($team1Node->filter('.tour-match__name')->text());
+                    $team2 = trim($team2Node->filter('.tour-match__name')->text());
 
-                $team1City = $team1Node->filter('.tour-match__city')->count()
-                    ? trim($team1Node->filter('.tour-match__city')->text())
-                    : null;
-                $team2City = $team2Node->filter('.tour-match__city')->count()
-                    ? trim($team2Node->filter('.tour-match__city')->text())
-                    : null;
+                    $team1Logo = $team1Node->filter('img')->count()
+                        ? $team1Node->filter('img')->attr('src')
+                        : null;
+                    $team2Logo = $team2Node->filter('img')->count()
+                        ? $team2Node->filter('img')->attr('src')
+                        : null;
 
-                $scoreBlock = $item->filter('.tour-match__score');
-                $isPlayed = false;
-                $scoreOrDate = null;
-                $penaltyWinner = null;
+                    $team1City = $team1Node->filter('.tour-match__city')->count()
+                        ? trim($team1Node->filter('.tour-match__city')->text())
+                        : null;
+                    $team2City = $team2Node->filter('.tour-match__city')->count()
+                        ? trim($team2Node->filter('.tour-match__city')->text())
+                        : null;
 
-                if ($scoreBlock->count()) {
-                    $classes = $scoreBlock->attr('class') ?? '';
+                    $scoreBlock = $matchNode->filter('.tour-match__score');
+                    $isPlayed = false;
+                    $scoreOrDate = null;
+                    $penaltyWinner = null;
 
-                    if (str_contains($classes, 'time')) {
-                        // Предстоящий матч — есть время
-                        $time = trim($scoreBlock->text());
-                        $scoreOrDate = $this->formatDate($date) . ' ' . $time;
-                        $isPlayed = false;
-                    } else {
-                        $spans = $scoreBlock->filter('span')->each(fn($s) => trim($s->text()));
-                        $spans = array_filter($spans, fn($s) => $s !== '&nbsp;' && $s !== ':' && $s !== '');
-                        $spanValues = array_values($spans);
+                    if ($scoreBlock->count()) {
+                        $classes = $scoreBlock->attr('class') ?? '';
 
-                        if (in_array('-', $spanValues)) {
-                            // Дата ещё не назначена
-                            $scoreOrDate = $this->formatDate($date);
+                        if (str_contains($classes, 'time')) {
+                            // Предстоящий матч — есть время
+                            $time = trim($scoreBlock->text());
+                            $scoreOrDate = $this->formatDate($date) . ' ' . $time;
                             $isPlayed = false;
                         } else {
-                            $nums = array_values(array_filter($spanValues, fn($s) => is_numeric($s)));
+                            $spans = $scoreBlock->filter('span')->each(fn($s) => trim($s->text()));
+                            $spans = array_filter($spans, fn($s) => $s !== '&nbsp;' && $s !== ':' && $s !== '');
+                            $spanValues = array_values($spans);
 
-                            if (count($nums) >= 2) {
-                                $g1 = (int)$nums[0];
-                                $g2 = (int)$nums[1];
-                                $scoreOrDate = $g1 . ':' . $g2;
-                                $isPlayed = true;
+                            if (in_array('-', $spanValues)) {
+                                // Дата ещё не назначена
+                                $scoreOrDate = $this->formatDate($date);
+                                $isPlayed = false;
+                            } else {
+                                $nums = array_values(array_filter($spanValues, fn($s) => is_numeric($s)));
 
-                                // Пенальти — "б" в спанах
-                                $hasPenalty = in_array('б', $spanValues, true);
-                                if ($hasPenalty && $g1 === $g2) {
-                                    if (count($nums) >= 4) {
-                                        // Счёт серии пенальти доступен: nums[2]:nums[3]
-                                        $penaltyWinner = ((int)$nums[2] > (int)$nums[3]) ? 'team1' : 'team2';
-                                    } else {
-                                        // Пытаемся определить по классу winning
-                                        $t1Classes = $team1Node->attr('class') ?? '';
-                                        $t2Classes = $team2Node->attr('class') ?? '';
-                                        if (preg_match('/\b(win|winner|is-win|is-winner)\b/', $t1Classes)) {
-                                            $penaltyWinner = 'team1';
-                                        } elseif (preg_match('/\b(win|winner|is-win|is-winner)\b/', $t2Classes)) {
-                                            $penaltyWinner = 'team2';
+                                if (count($nums) >= 2) {
+                                    $g1 = (int)$nums[0];
+                                    $g2 = (int)$nums[1];
+                                    $scoreOrDate = $g1 . ':' . $g2;
+                                    $isPlayed = true;
+
+                                    // Пенальти: <div class="tour-match__penalty">X:Y</div>
+                                    $penaltyNode = $matchNode->filter('.tour-match__penalty');
+                                    if ($penaltyNode->count() && $g1 === $g2) {
+                                        $penaltyText = trim($penaltyNode->text());
+                                        if (preg_match('/(\d+):(\d+)/', $penaltyText, $pm)) {
+                                            $penaltyWinner = ((int)$pm[1] > (int)$pm[2]) ? 'team1' : 'team2';
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                if ($team1 && $team2 && $scoreOrDate !== null) {
-                    $data[] = [
-                        'group_name'     => $groupName,
-                        'team1'          => $team1,
-                        'team1_logo'     => $team1Logo,
-                        'team1_city'     => $team1City,
-                        'team2'          => $team2,
-                        'team2_logo'     => $team2Logo,
-                        'team2_city'     => $team2City,
-                        'score_or_date'  => $scoreOrDate,
-                        'is_played'      => $isPlayed,
-                        'penalty_winner' => $penaltyWinner,
-                    ];
-                }
+                    if ($team1 && $team2 && $scoreOrDate !== null) {
+                        $data[] = [
+                            'group_name'     => $groupName,
+                            'team1'          => $team1,
+                            'team1_logo'     => $team1Logo,
+                            'team1_city'     => $team1City,
+                            'team2'          => $team2,
+                            'team2_logo'     => $team2Logo,
+                            'team2_city'     => $team2City,
+                            'score_or_date'  => $scoreOrDate,
+                            'is_played'      => $isPlayed,
+                            'penalty_winner' => $penaltyWinner,
+                        ];
+                    }
+                });
             });
 
             // Проверяем наличие следующей страницы
