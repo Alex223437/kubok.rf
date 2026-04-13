@@ -55,6 +55,12 @@
         $wBsk3HasTeams = $wThirdPlacePair
             && !empty($wThirdPlacePair->team1_name) && $wThirdPlacePair->team1_name !== '?'
             && !empty($wThirdPlacePair->team2_name) && $wThirdPlacePair->team2_name !== '?';
+        $wBsk3Dates = [];
+        foreach (($wThirdPlacePair?->games ?? []) as $g) {
+            if (($g['status'] ?? '') === 'Scheduled' && !empty($g['date'])) {
+                $wBsk3Dates[] = $g['date'];
+            }
+        }
     }
 @endphp
 
@@ -177,21 +183,10 @@
         $bsk3HasTeams = $thirdPlacePair
             && !empty($thirdPlacePair->team1_name) && $thirdPlacePair->team1_name !== '?'
             && !empty($thirdPlacePair->team2_name) && $thirdPlacePair->team2_name !== '?';
-        $bsk3NextGame = null;
+        $bsk3Dates = [];
         foreach (($thirdPlacePair?->games ?? []) as $g) {
             if (($g['status'] ?? '') === 'Scheduled' && !empty($g['date'])) {
-                $bsk3NextGame = $g; break;
-            }
-        }
-        $bsk3Date = '';
-        $bsk3Time = '';
-        if ($bsk3NextGame) {
-            try {
-                $bsk3Dt   = \Carbon\Carbon::parse($bsk3NextGame['date']);
-                $bsk3Date = $bsk3Dt->format('d/m');
-                $bsk3Time = $bsk3Dt->format('H:i') !== '00:00' ? $bsk3Dt->format('H:i') . ' мск' : '';
-            } catch (\Throwable $e) {
-                $bsk3Date = $bsk3NextGame['date'];
+                $bsk3Dates[] = $g['date'];
             }
         }
     @endphp
@@ -215,10 +210,9 @@
                     </div>
                 @endif
                 <div class="bsk-pcard__center">
-                    @if($bsk3HasTeams && $bsk3Date)
-                        <span class="bsk-pcard__date">{{ $bsk3Date }}</span>
-                        @if($bsk3Time)<span class="bsk-pcard__time">{{ $bsk3Time }}</span>@endif
-                    @endif
+                    @foreach($bsk3Dates as $bsk3D)
+                        <span class="bsk-pcard__date">{{ $bsk3D }}</span>
+                    @endforeach
                 </div>
                 @if(!$bsk3HasTeams)
                     <div class="bsk-pcard__team">
@@ -319,7 +313,11 @@
                     @endif
                     <span class="bsk-pcard__team-name">{{ $wThirdPlacePair->team1_name }}</span>
                 </div>
-                <div class="bsk-pcard__center"></div>
+                <div class="bsk-pcard__center">
+                    @foreach($wBsk3Dates as $wD)
+                        <span class="bsk-pcard__date">{{ $wD }}</span>
+                    @endforeach
+                </div>
                 <div class="bsk-pcard__team">
                     @if($wThirdPlacePair->team2_logo)
                         <img class="bsk-pcard__logo" src="{{ $wThirdPlacePair->team2_logo }}" alt="{{ $wThirdPlacePair->team2_name }}">
