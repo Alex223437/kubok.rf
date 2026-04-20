@@ -2,6 +2,7 @@
 
 namespace App\Services\Parsers;
 
+use App\Models\Option;
 use Illuminate\Support\Facades\Http;
 
 class KhlParser extends BaseParser
@@ -43,7 +44,24 @@ class KhlParser extends BaseParser
     public function parse(string $url): array
     {
         $logos = $this->fetchTeamLogos();
+        $data  = $this->parseStandingsFromUrl($url, $logos);
 
+        // В плей-офф основной URL показывает сетку — пробуем URL регулярного чемпионата
+        if (empty($data)) {
+            $seasonId = Option::where('code', 'khl_season_id')->value('value');
+            if ($seasonId) {
+                $data = $this->parseStandingsFromUrl(
+                    "https://www.khl.ru/standings/{$seasonId}/conference/",
+                    $logos
+                );
+            }
+        }
+
+        return $data;
+    }
+
+    private function parseStandingsFromUrl(string $url, array $logos): array
+    {
         $crawler = $this->getCrawler($url);
         $data = [];
 
@@ -107,7 +125,6 @@ class KhlParser extends BaseParser
             }
         });
 
-        // Return empty if this looks like playoff data (no regular season rows found)
         return $data;
     }
 
