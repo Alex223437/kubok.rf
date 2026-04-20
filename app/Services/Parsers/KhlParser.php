@@ -65,7 +65,9 @@ class KhlParser extends BaseParser
         $crawler = $this->getCrawler($url);
         $data = [];
 
-        $crawler->filter('table tbody tr')->each(function ($node) use (&$data, $logos) {
+        $seen = [];
+
+        $crawler->filter('table tbody tr')->each(function ($node) use (&$data, &$seen, $logos) {
             $cellNodes = $node->filter('td, th');
             $cells = $cellNodes->each(function ($cell) {
                 return trim($cell->text());
@@ -80,6 +82,12 @@ class KhlParser extends BaseParser
             }
 
             $teamName = $cells[1];
+
+            // Page has multiple tables (overall + conference + division) — skip duplicates
+            if (isset($seen[$teamName])) {
+                return;
+            }
+            $seen[$teamName] = true;
             $logo = $logos[$teamName] ?? $logos[$this->normalizeTeamName($teamName)] ?? null;
 
             $divInfo = self::DIVISION_MAP[$teamName] ?? null;
