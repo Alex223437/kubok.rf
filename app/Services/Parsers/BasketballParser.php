@@ -34,7 +34,7 @@ class BasketballParser extends BaseParser
         ];
 
         // Сначала пробуем actual-standings
-        $url = "https://bb.sportoteka.org/api/abc/comps/actual-standings?tag={$tag}&season=2026";
+        $url = "https://basket2.sportoteka.org/api/abc/comps/actual-standings?tag={$tag}&season=2026";
         $response = Http::withHeaders($headers)->get($url);
         if (!$response->successful()) {
             throw new \Exception("Failed to fetch JSON from API [{$url}]. Status: " . $response->status());
@@ -49,7 +49,7 @@ class BasketballParser extends BaseParser
         );
 
         if (!$hasRegular) {
-            $urlFull = "https://bb.sportoteka.org/api/abc/comps/standings?tag={$tag}&season=2026";
+            $urlFull = "https://basket2.sportoteka.org/api/abc/comps/standings?tag={$tag}&season=2026";
             $responseFull = Http::withHeaders($headers)->get($urlFull);
             if ($responseFull->successful()) {
                 $jsonFull = $responseFull->json();
