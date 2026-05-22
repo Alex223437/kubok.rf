@@ -178,9 +178,6 @@ class ParseLeaguesCommand extends Command
                 ? $basketGroupMap[$basketGroup]
                 : ['msl', 'wsl', 'mhl', 'whl', 'wpremier'];
 
-            BasketballStanding::whereIn('tag', $tags)->delete();
-            BasketballPlayoffPair::whereIn('tag', $tags)->delete();
-
             $consecutiveFails = 0;
 
             foreach ($tags as $tag) {
@@ -196,6 +193,7 @@ class ParseLeaguesCommand extends Command
                         $basketData = $basketballParser->parse($tag);
 
                         if (!empty($basketData)) {
+                            BasketballStanding::where('tag', $tag)->delete();
                             foreach ($basketData as $row) {
                                 BasketballStanding::create([
                                     'tag'        => $tag,
@@ -225,6 +223,7 @@ class ParseLeaguesCommand extends Command
                         $playoffData = $basketballParser->parsePlayoffPairs($json);
 
                         if (!empty($playoffData)) {
+                            BasketballPlayoffPair::where('tag', $tag)->delete();
                             foreach ($playoffData as $row) {
                                 BasketballPlayoffPair::create(array_merge($row, ['tag' => $tag]));
                             }
